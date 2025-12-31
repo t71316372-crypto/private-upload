@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>アップロード（最小）</title>
+</head>
+
+<body>
+
+<h1>アップロード（最小）</h1>
+
+<input type="file" id="fileInput">
+<button id="uploadBtn">アップロード</button>
+
+<p id="status"></p>
+
+<!-- ここから script -->
+
+<script>
+  console.log("script OK");
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
+  const SUPABASE_ANON_KEY = "（そのまま）";
+
+  const client = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+
+  console.log("client:", client);
+
+  const fileInput = document.getElementById("fileInput");
+  const uploadBtn = document.getElementById("uploadBtn");
+  const statusEl = document.getElementById("status");
+
+  uploadBtn.addEventListener("click", async () => {
+  console.log("① click event fired");
+
+  const file = fileInput.files[0];
+  if (!file) {
+    statusEl.textContent = "ファイルを選んでください";
+    return;
+  }
+
+  statusEl.textContent = "アップロード中…";
+
+  const ext = file.name.split('.').pop();
+  const safeName = `${Date.now()}.${ext}`;
+  const safeFile = new File([file], safeName, { type: file.type });
+  const filePath = `test/${safeName}`;
+
+  console.log("② before upload", {
+    filePath,
+    size: safeFile.size,
+    type: safeFile.type
+  });
+
+  const { error } = await client.storage
+    .from("audio")
+    .upload(filePath, safeFile, { upsert: true });
+
+  console.log("③ after upload", error);
+
+  if (error) {
+    statusEl.textContent = "失敗: " + error.message;
+    console.error(error);
+  } else {
+    statusEl.textContent = "アップロード成功！";
+    console.log("uploaded:", filePath);
+  }
+});
+
+</script>
+
+<!-- ここまで script -->
+
+</body>
+</html>
