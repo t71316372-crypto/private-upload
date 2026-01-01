@@ -144,7 +144,9 @@
 
     const isAudio = file.type.startsWith("audio/");
     const bucket = isAudio ? "audio" : "imeges";
-    const path = `${Date.now()}_${file.name}`;
+  const ext = file.name.split(".").pop() || "bin";
+const path = `${Date.now()}.${ext}`;
+
 
     const { error } = await sb.storage.from(bucket).upload(path, file);
 
@@ -212,4 +214,5 @@
 
 </body>
 </html>
+
 
