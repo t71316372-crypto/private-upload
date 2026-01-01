@@ -3,53 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <title>Images</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body {
-      font-family: system-ui, sans-serif;
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 16px;
-      background: #f7f7f7;
+      font-family: sans-serif;
+      margin: 20px;
     }
     h1 {
       text-align: center;
     }
-    img {
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .grid img {
       width: 100%;
-      border-radius: 8px;
-      margin-bottom: 12px;
+      height: auto;
+      cursor: pointer;
+      border-radius: 4px;
     }
   </style>
 </head>
 <body>
+  <h1>Images</h1>
+  <div id="grid" class="grid"></div>
 
-<h1>Images</h1>
-<div id="imageList"></div>
+  <script>
+    const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
+    const BUCKET = "images";
 
-<script>
-const sb = window.supabase.createClient(
-  "https://erdwkchgsewnzkyriypx.supabase.co",
-  "あなたのanonキー"
-);
+    async function loadImages() {
+      const res = await fetch(
+        `${SUPABASE_URL}/storage/v1/object/list/${BUCKET}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            limit: 100,
+            offset: 0,
+            sortBy: { column: "created_at", order: "desc" },
+          }),
+        }
+      );
 
-async function loadImages() {
-  const { data } = await sb.storage.from("imeges").list();
-  const list = document.getElementById("imageList");
-  list.innerHTML = "";
+      const files = await res.json();
+      const grid = document.getElementById("grid");
 
-  data?.forEach(f => {
-    const { data: url } = sb.storage.from("imeges").getPublicUrl(f.name);
-    const img = document.createElement("img");
-    img.src = url.publicUrl;
-    list.appendChild(img);
-  });
-}
+      files.forEach(file => {
+        if (!file.name.match(/\.(jpg|jpeg|png|webp)$/i)) return;
 
-loadImages();
-</script>
+        const img = document.createElement("img");
+        img.src = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${file.name}`;
+        img.onclick = () => window.open(img.src, "_blank");
+        grid.appendChild(img);
+      });
+    }
 
+    loadImages();
+  </script>
 </body>
 </html>
-
