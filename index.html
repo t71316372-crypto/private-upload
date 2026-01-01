@@ -85,13 +85,17 @@
   formData.append("file", file);
 
   try {
-    const res = await fetch(
-      "https://erdwkchgsewnzkyriypx.functions.supabase.co/clever-responder",
-      {
-        method: "POST",
-        body: formData
-      }
-    );
+   const res = await fetch(
+  "https://erdwkchgsewnzkyriypx.functions.supabase.co/clever-responder",
+  {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8"
+    },
+    body: formData
+  }
+);
+
 
     if (!res.ok) {
       throw new Error("upload failed");
@@ -111,6 +115,7 @@
 
 </body>
 </html>
+
 
 
 
