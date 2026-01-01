@@ -31,6 +31,7 @@
 
   <script>
     const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
+    const SUPABASE_ANON_KEY = " eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";   
     const BUCKET = "images";
 
     async function loadImages() {
@@ -38,9 +39,11 @@
         `${SUPABASE_URL}/storage/v1/object/list/${BUCKET}`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+         headers: {
+  "Content-Type": "application/json",
+  "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+},
+
           body: JSON.stringify({
             limit: 100,
             offset: 0,
