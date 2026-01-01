@@ -170,10 +170,13 @@
     const text = chatInput.value.trim();
     if (!text) return;
 
-    await sb.from("messages").insert({
-      text,
-      sender_name: senderName
-    });
+   await sb.from("messages").insert([
+  {
+    text,
+    sender_name: senderName
+  }
+]);
+
 
     chatInput.value = "";
     loadMessages();
@@ -209,3 +212,4 @@
 
 </body>
 </html>
+
