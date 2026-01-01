@@ -8,6 +8,8 @@
   <!-- Supabase Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+
+
   <!-- Font -->
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap" rel="stylesheet">
 
@@ -107,87 +109,64 @@
 </div>
 
 <script>
-  /* ===== Supabase ===== */
-  const sb = window.supabase.createClient(
-    "https://erdwkchgsewnzkyriypx.supabase.co",
-    "ANON_KEY_そのまま"
-  );
+const sb = window.supabase.createClient(
+  "https://erdwkchgsewnzkyriypx.supabase.co",
+  "あなたのanonキー"
+);
 
-  /* ===== 表示名 ===== */
-  let senderName = localStorage.getItem("senderName");
-  if (!senderName) {
-    senderName = prompt("表示名") || "unknown";
-    localStorage.setItem("senderName", senderName);
-  }
+const fileInput = document.getElementById("fileInput");
+const uploadBtn = document.getElementById("uploadBtn");
+const statusEl = document.getElementById("status");
+const imageList = document.getElementById("imageList");
+const audioList = document.getElementById("audioList");
 
-  /* ===== Upload ===== */
-  uploadBtn.onclick = async () => {
-    const file = fileInput.files[0];
-    if (!file) return;
+/* upload */
+uploadBtn.onclick = async () => {
+  const file = fileInput.files[0];
+  if (!file) return;
 
-    status.textContent = "アップロード中…";
+  const isAudio = file.type.startsWith("audio/");
+  const bucket = isAudio ? "audio" : "imeges";
+  const path = `${Date.now()}_${file.name}`;
 
-    const isAudio = file.type.startsWith("audio/");
-    const bucket = isAudio ? "audio" : "imeges";
-    const path = `public/${Date.now()}_${file.name}`;
+  statusEl.textContent = "アップロード中…";
+  const { error } = await sb.storage.from(bucket).upload(path, file);
 
-    const { error } = await sb.storage.from(bucket).upload(path, file);
-    status.textContent = error ? "失敗" : "成功";
-
-    loadImages();
-    loadAudio();
-  };
-
-  /* ===== Chat ===== */
-  sendBtn.onclick = async () => {
-    const text = chatInput.value.trim();
-    if (!text) return;
-
-    await sb.from("messages").insert({ text, sender_name: senderName });
-    chatInput.value = "";
-    loadMessages();
-  };
-
-  async function loadMessages() {
-    const { data } = await sb.from("messages").select("*").order("created_at");
-    chatLog.innerHTML = "";
-    data.forEach(m => {
-      const div = document.createElement("div");
-      div.className = "msg";
-      div.innerHTML = `<div class="stamp">${m.sender_name} / ${new Date(m.created_at).toLocaleString()}</div>${m.text.replace(/\n/g,"<br>")}`;
-      chatLog.appendChild(div);
-    });
-  }
-
-  async function loadImages() {
-    const { data } = await sb.storage.from("imeges").list("public");
-    imageList.innerHTML = "";
-    data.forEach(f => {
-      const url = sb.storage.from("imeges").getPublicUrl(`public/${f.name}`).data.publicUrl;
-      const img = document.createElement("img");
-      img.src = url;
-      img.onclick = () => window.open(url);
-      imageList.appendChild(img);
-    });
-  }
-
-  async function loadAudio() {
-    const { data } = await sb.storage.from("audio").list("public");
-    audioList.innerHTML = "";
-    data.forEach(f => {
-      const url = sb.storage.from("audio").getPublicUrl(`public/${f.name}`).data.publicUrl;
-      const audio = document.createElement("audio");
-      audio.src = url;
-      audio.controls = true;
-      audio.controlsList = "nodownload";
-      audioList.appendChild(audio);
-    });
-  }
-
-  loadMessages();
+  statusEl.textContent = error ? "失敗" : "成功";
+  fileInput.value = "";
   loadImages();
   loadAudio();
-</script>
+};
 
+/* images */
+async function loadImages() {
+  const { data } = await sb.storage.from("imeges").list();
+  imageList.innerHTML = "";
+  data?.forEach(f => {
+    const { data: url } = sb.storage.from("imeges").getPublicUrl(f.name);
+    const img = document.createElement("img");
+    img.src = url.publicUrl;
+    imageList.appendChild(img);
+  });
+}
+
+/* audio */
+async function loadAudio() {
+  const { data } = await sb.storage.from("audio").list();
+  audioList.innerHTML = "";
+  data?.forEach(f => {
+    const { data: url } = sb.storage.from("audio").getPublicUrl(f.name);
+    const audio = document.createElement("audio");
+    audio.src = url.publicUrl;
+    audio.controls = true;
+    audioList.appendChild(audio);
+  });
+}
+
+loadImages();
+loadAudio();
+</script>
 </body>
+
 </html>
+
