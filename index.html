@@ -83,14 +83,8 @@
     formData.append("file", file);
 
     try {
-     const res = await fetch(FUNCTION_URL, {
-  method: "POST",
-  headers: {
-    "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-    "apikey": SUPABASE_ANON_KEY
-  },
-  body: formData
-});
+     const res = await
+      
 
       if (!res.ok) {
         throw new Error("upload failed");
@@ -109,6 +103,7 @@
 
 </body>
 </html>
+
 
 
 
