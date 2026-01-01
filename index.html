@@ -118,34 +118,27 @@ const statusEl = document.getElementById("status");
 const imageList = document.getElementById("imageList");
 const audioList = document.getElementById("audioList");
 
-uploadBtn.onclick = async () => {
+ uploadBtn.onclick = async () => {
   const file = fileInput.files[0];
   if (!file) return;
 
   const isAudio = file.type.startsWith("audio/");
   const bucket = isAudio ? "audio" : "imeges";
 
-  const ext =
-    file.type === "audio/mpeg" ? "mp3" :
-    file.type === "audio/mp4"  ? "m4a" :
-    file.type.startsWith("image/") ? "jpg" :
-    "bin";
-
-  const path = `${Date.now()}.${ext}`;
   statusEl.textContent = "アップロード中…";
 
   try {
-    const url =
-      `https://erdwkchgsewnzkyriypx.supabase.co/storage/v1/object/${bucket}/${path}` +
-      `?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8`;
-
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("bucket", bucket);
 
-    const res = await fetch(url, {
-      method: "POST",
-      body: formData
-    });
+    const res = await fetch(
+      "https://erdwkchgsewnzkyriypx.supabase.co/functions/v1/upload",
+      {
+        method: "POST",
+        body: formData
+      }
+    );
 
     if (!res.ok) throw new Error("upload failed");
 
@@ -160,6 +153,7 @@ uploadBtn.onclick = async () => {
     statusEl.textContent = "失敗";
   }
 };
+
 
 
 
@@ -194,5 +188,6 @@ loadAudio();
 
 </body>
 </html>
+
 
 
