@@ -13,7 +13,7 @@
 
   <style>
     body {
-      font-family: "Zen Kurenaido", system-ui, "Hiragino Sans", sans-serif;
+      font-family: "Zen Kurenaido", system-ui, sans-serif;
       max-width: 720px;
       margin: 0 auto;
       padding: 16px;
@@ -21,7 +21,6 @@
     }
 
     h1 {
-      font-size: 1.4rem;
       text-align: center;
       margin-bottom: 16px;
     }
@@ -34,69 +33,48 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
 
-    .row {
-      margin-bottom: 12px;
-    }
-
     button {
       padding: 8px 16px;
       border-radius: 999px;
       border: none;
       background: #2563eb;
       color: #fff;
-      font-size: 0.95rem;
       cursor: pointer;
-      font-family: "Zen Kurenaido", system-ui, sans-serif;
+      font-family: inherit;
     }
 
-    button:disabled {
-      opacity: 0.6;
-    }
-
-    /* Chat input */
-    #chatInput {
+    textarea {
       width: 100%;
       min-height: 96px;
       resize: vertical;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #e5e7eb;
-      font-family: "Zen Kurenaido", system-ui, sans-serif;
-      font-size: 1rem;
-      line-height: 1.6;
-      box-sizing: border-box;
+      padding: 10px;
+      font-family: inherit;
     }
 
-    /* Chat log */
     #chatLog .msg {
-      margin-bottom: 8px;
-      padding: 6px 8px;
       background: #f1f5f9;
+      padding: 8px;
       border-radius: 8px;
-      color: #333;
-      line-height: 1.6;
-      letter-spacing: 0.03em;
-      font-size: 0.95rem;
+      margin-bottom: 8px;
     }
 
     #chatLog .stamp {
       font-size: 0.75rem;
-      opacity: 0.65;
-      margin-bottom: 2px;
+      opacity: 0.6;
+      margin-bottom: 4px;
     }
 
-#imageList img {
-  max-width: 100%;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  cursor: pointer;
-}
+    #imageList img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
 
-#audioList audio {
-  width: 100%;
-  margin-bottom: 8px;
-}
-
+    #audioList audio {
+      width: 100%;
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 
@@ -104,83 +82,20 @@
 
 <h1>私たち二人だけのアップローダー</h1>
 
-<!-- ===== Upload ===== -->
 <div class="card">
-  <div class="row">
   <input type="file" id="fileInput">
-
-  </div>
-  <div class="row">
-    <button id="uploadBtn">アップロード</button>
-    <span id="status" style="margin-left:8px;font-size:0.9rem;"></span>
-  </div>
+  <br><br>
+  <button id="uploadBtn">アップロード</button>
+  <span id="status"></span>
 </div>
 
-<!-- ===== Chat ===== -->
 <div class="card">
-  <div class="row">
-    <textarea id="chatInput" placeholder="メッセージを入力（Enterで送信 / Shift+Enterで改行）"></textarea>
-  </div>
-  <div class="row">
-    <button id="sendBtn">送信</button>
-  </div>
+  <textarea id="chatInput" placeholder="メッセージを入力"></textarea>
+  <br><br>
+  <button id="sendBtn">送信</button>
   <div id="chatLog"></div>
 </div>
-<script>
-  /* ===== Media Load ===== */
 
-  async function loadImages() {
-    const { data } = await sb.storage.from("imeges").list("public", {
-      limit: 20,
-      sortBy: { column: "created_at", order: "desc" }
-    });
-
-    const imageList = document.getElementById("imageList");
-    imageList.innerHTML = "";
-
-    data?.forEach(file => {
-      const { data: url } = sb.storage
-        .from("imeges")
-        .getPublicUrl(`public/${file.name}`);
-
-      const img = document.createElement("img");
-      img.src = url.publicUrl;
-      img.onclick = () => window.open(img.src, "_blank"); // 簡易拡大
-
-      imageList.appendChild(img);
-    });
-  }
-
-  async function loadAudio() {
-    const { data } = await sb.storage.from("audio").list("public", {
-      limit: 20,
-      sortBy: { column: "created_at", order: "desc" }
-    });
-
-    const audioList = document.getElementById("audioList");
-    audioList.innerHTML = "";
-
-    data?.forEach(file => {
-      const { data: url } = sb.storage
-        .from("audio")
-        .getPublicUrl(`public/${file.name}`);
-
-      const audio = document.createElement("audio");
-      audio.src = url.publicUrl;
-      audio.controls = true;
-      audio.controlsList = "nodownload noplaybackrate";
-
-      audioList.appendChild(audio);
-    });
-  }
-
-  loadImages();
-  loadAudio();
-</script>
-
-<script>
-
-<!-- ===== Media Viewer ===== -->
 <div class="card">
   <h2>Images</h2>
   <div id="imageList"></div>
@@ -190,102 +105,89 @@
   <h2>Audio</h2>
   <div id="audioList"></div>
 </div>
-  
-  /* ===== Supabase 初期化 ===== */
+
+<script>
+  /* ===== Supabase ===== */
   const sb = window.supabase.createClient(
     "https://erdwkchgsewnzkyriypx.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8"
+    "ANON_KEY_そのまま"
   );
 
-  /* ===== 表示名（初回のみ） ===== */
+  /* ===== 表示名 ===== */
   let senderName = localStorage.getItem("senderName");
   if (!senderName) {
-    senderName = prompt("表示名を入力してください")?.trim() || "unknown";
+    senderName = prompt("表示名") || "unknown";
     localStorage.setItem("senderName", senderName);
   }
 
   /* ===== Upload ===== */
-  const fileInput = document.getElementById("fileInput");
-  const uploadBtn = document.getElementById("uploadBtn");
-  const statusEl = document.getElementById("status");
-
   uploadBtn.onclick = async () => {
     const file = fileInput.files[0];
-    if (!file) {
-      statusEl.textContent = "ファイルを選んでください";
-      return;
-    }
+    if (!file) return;
 
-    uploadBtn.disabled = true;
-    statusEl.textContent = "アップロード中…";
+    status.textContent = "アップロード中…";
 
     const isAudio = file.type.startsWith("audio/");
     const bucket = isAudio ? "audio" : "imeges";
-  const ext = file.name.split(".").pop() || "bin";
-const path = `${Date.now()}.${ext}`;
-
+    const path = `public/${Date.now()}_${file.name}`;
 
     const { error } = await sb.storage.from(bucket).upload(path, file);
+    status.textContent = error ? "失敗" : "成功";
 
-    statusEl.textContent = error ? "失敗" : "成功";
-    if (!error) fileInput.value = "";
-    uploadBtn.disabled = false;
+    loadImages();
+    loadAudio();
   };
 
   /* ===== Chat ===== */
-  const chatInput = document.getElementById("chatInput");
-  const sendBtn = document.getElementById("sendBtn");
-  const chatLog = document.getElementById("chatLog");
-
-
   sendBtn.onclick = async () => {
     const text = chatInput.value.trim();
     if (!text) return;
 
-   await sb.from("messages").insert([
-  {
-    text,
-    sender_name: senderName
-  }
-]);
-
-
+    await sb.from("messages").insert({ text, sender_name: senderName });
     chatInput.value = "";
     loadMessages();
   };
 
   async function loadMessages() {
-    const { data } = await sb
-      .from("messages")
-      .select("*")
-      .order("created_at", { ascending: true });
-
+    const { data } = await sb.from("messages").select("*").order("created_at");
     chatLog.innerHTML = "";
     data.forEach(m => {
-      const wrap = document.createElement("div");
-      wrap.className = "msg";
+      const div = document.createElement("div");
+      div.className = "msg";
+      div.innerHTML = `<div class="stamp">${m.sender_name} / ${new Date(m.created_at).toLocaleString()}</div>${m.text.replace(/\n/g,"<br>")}`;
+      chatLog.appendChild(div);
+    });
+  }
 
-      const dt = new Date(m.created_at);
-      const stamp = document.createElement("div");
-      stamp.className = "stamp";
-      stamp.textContent = `${m.sender_name || "unknown"}  ${dt.toLocaleString("ja-JP")}`;
+  async function loadImages() {
+    const { data } = await sb.storage.from("imeges").list("public");
+    imageList.innerHTML = "";
+    data.forEach(f => {
+      const url = sb.storage.from("imeges").getPublicUrl(`public/${f.name}`).data.publicUrl;
+      const img = document.createElement("img");
+      img.src = url;
+      img.onclick = () => window.open(url);
+      imageList.appendChild(img);
+    });
+  }
 
-      const body = document.createElement("div");
-      body.innerHTML = (m.text || "").replace(/\n/g, "<br>");
-
-      wrap.appendChild(stamp);
-      wrap.appendChild(body);
-      chatLog.appendChild(wrap);
+  async function loadAudio() {
+    const { data } = await sb.storage.from("audio").list("public");
+    audioList.innerHTML = "";
+    data.forEach(f => {
+      const url = sb.storage.from("audio").getPublicUrl(`public/${f.name}`).data.publicUrl;
+      const audio = document.createElement("audio");
+      audio.src = url;
+      audio.controls = true;
+      audio.controlsList = "nodownload";
+      audioList.appendChild(audio);
     });
   }
 
   loadMessages();
+  loadImages();
+  loadAudio();
 </script>
 
 </body>
 </html>
-
-
-
-
-
