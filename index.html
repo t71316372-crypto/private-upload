@@ -118,7 +118,6 @@ const statusEl = document.getElementById("status");
 const imageList = document.getElementById("imageList");
 const audioList = document.getElementById("audioList");
 
-/* upload */
 uploadBtn.onclick = async () => {
   const file = fileInput.files[0];
   if (!file) return;
@@ -137,14 +136,10 @@ uploadBtn.onclick = async () => {
 
   try {
     const url =
-      `https://erdwkchgsewnzkyriypx.supabase.co/storage/v1/object/${bucket}/${path}`;
+      `https://erdwkchgsewnzkyriypx.supabase.co/storage/v1/object/public/${bucket}/${path}`;
 
     const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer あなたのanonキー"
-        // Content-Type は **指定しない**
-      },
+      method: "PUT",
       body: file
     });
 
@@ -161,7 +156,6 @@ uploadBtn.onclick = async () => {
     statusEl.textContent = "失敗";
   }
 };
-
 
 
 /* images */
@@ -195,4 +189,5 @@ loadAudio();
 
 </body>
 </html>
+
 
