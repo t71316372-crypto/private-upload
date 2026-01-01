@@ -2,9 +2,11 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <h1>★テスト：この index.html が表示されています</h1>
-
+  <title>Private Upload & Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Supabase Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body {
@@ -17,6 +19,7 @@
     h1 {
       font-size: 1.4rem;
       text-align: center;
+      margin-bottom: 16px;
     }
     .card {
       background: #fff;
@@ -40,6 +43,13 @@
     button:disabled {
       opacity: 0.6;
     }
+    #chatLog div {
+      margin-bottom: 6px;
+      padding: 4px 6px;
+      background: #f1f5f9;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 
@@ -47,80 +57,99 @@
 
 <h1>私たち二人だけのアップローダー</h1>
 
+<!-- ===== Upload ===== -->
 <div class="card">
   <div class="row">
-    <input type="file" id="fileInput">
+    <input type="file" id="fileInput" accept="image/*,audio/*">
   </div>
-
   <div class="row">
     <button id="uploadBtn">アップロード</button>
     <span id="status" style="margin-left:8px;font-size:0.9rem;"></span>
   </div>
 </div>
 
+<!-- ===== Chat ===== -->
+<div class="card">
+  <div class="row">
+    <input type="text" id="chatInput" placeholder="メッセージを入力">
+  </div>
+  <div class="row">
+    <button id="sendBtn">送信</button>
+  </div>
+  <div id="chatLog"></div>
+</div>
+
 <script>
-  const fileInput = document.getElementById("fileInput");
-  const uploadBtn = document.getElementById("uploadBtn");
-  const statusEl = document.getElementById("status");
-
-  // ★ Edge Function の URL（もう作ったやつ）
-  const FUNCTION_URL =
-    "https://erdwkchgsewnzkyriypx.supabase.co/functions/v1/clever-responder";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";
-
-
- uploadBtn.onclick = async (event) => {
-  event.preventDefault();
-
-  const file = fileInput.files[0];
-  if (!file) {
-    statusEl.textContent = "ファイルを選んでください";
-    return;
-  }
-
-  uploadBtn.disabled = true;
-  statusEl.textContent = "アップロード中…";
-
-  const formData = new FormData();
-  formData.append("file", file);
-
- uploadBtn.onclick = async () => {
-  const file = fileInput.files[0];
-  if (!file) return;
-
-  const isImage = file.type.startsWith("image/");
-  const isAudio = file.type.startsWith("audio/");
-
-  const bucket = isAudio ? "audio" : "imeges";
-  const path = `${Date.now()}_${file.name}`;
-
-  const { error } = await supabase
-    .storage
-    .from(bucket)
-    .upload(path, file);
-
-  if (error) {
-    statusEl.textContent = "失敗";
-  } else {
-    statusEl.textContent = "成功";
-  }
-};
-
-</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const supabase = supabase.createClient(
+  /* ===== Supabase 初期化 ===== */
+  const sb = supabase.createClient(
     "https://＜PROJECT-REF＞.supabase.co",
     "＜ANON_KEY＞"
   );
 
+  /* ===== Upload ===== */
+  const fileInput = document.getElementById("fileInput");
+  const uploadBtn = document.getElementById("uploadBtn");
+  const statusEl = document.getElementById("status");
+
+  uploadBtn.onclick = async () => {
+    const file = fileInput.files[0];
+    if (!file) {
+      statusEl.textContent = "ファイルを選んでください";
+      return;
+    }
+
+    uploadBtn.disabled = true;
+    statusEl.textContent = "アップロード中…";
+
+    const isImage = file.type.startsWith("image/");
+    const isAudio = file.type.startsWith("audio/");
+    const bucket = isAudio ? "audio" : "imeges";
+    const path = `${Date.now()}_${file.name}`;
+
+    const { error } = await sb.storage
+      .from(bucket)
+      .upload(path, file);
+
+    if (error) {
+      statusEl.textContent = "失敗";
+    } else {
+      statusEl.textContent = "成功";
+      fileInput.value = "";
+    }
+
+    uploadBtn.disabled = false;
+  };
+
+  /* ===== Chat ===== */
+  const chatInput = document.getElementById("chatInput");
+  const sendBtn = document.getElementById("sendBtn");
+  const chatLog = document.getElementById("chatLog");
+
+  sendBtn.onclick = async () => {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    await sb.from("messages").insert({ text });
+    chatInput.value = "";
+    loadMessages();
+  };
+
+  async function loadMessages() {
+    const { data } = await sb
+      .from("messages")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    chatLog.innerHTML = "";
+    data.forEach(m => {
+      const div = document.createElement("div");
+      div.textContent = m.text;
+      chatLog.appendChild(div);
+    });
+  }
+
+  loadMessages();
+</script>
 
 </body>
 </html>
-
-
-
-
-
-
-
