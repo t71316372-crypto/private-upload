@@ -1,1 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Images</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 16px;
+      background: #f7f7f7;
+    }
+    h1 {
+      text-align: center;
+    }
+    img {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Images</h1>
+<div id="imageList"></div>
+
+<script>
+const sb = window.supabase.createClient(
+  "https://erdwkchgsewnzkyriypx.supabase.co",
+  "あなたのanonキー"
+);
+
+async function loadImages() {
+  const { data } = await sb.storage.from("imeges").list();
+  const list = document.getElementById("imageList");
+  list.innerHTML = "";
+
+  data?.forEach(f => {
+    const { data: url } = sb.storage.from("imeges").getPublicUrl(f.name);
+    const img = document.createElement("img");
+    img.src = url.publicUrl;
+    list.appendChild(img);
+  });
+}
+
+loadImages();
+</script>
+
+</body>
+</html>
 
