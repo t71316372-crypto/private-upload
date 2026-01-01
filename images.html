@@ -39,10 +39,12 @@
         `${SUPABASE_URL}/storage/v1/object/list/${BUCKET}`,
         {
           method: "POST",
-         headers: {
+       headers: {
   "Content-Type": "application/json",
   "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+  "apikey": SUPABASE_ANON_KEY
 },
+
 
           body: JSON.stringify({
             limit: 100,
