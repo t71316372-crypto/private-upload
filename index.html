@@ -135,8 +135,9 @@ uploadBtn.onclick = async () => {
   const bucket = isAudio ? "audio" : "imeges";
 
   // 日本語ファイル名回避
-  const ext = file.name.split(".").pop();
-  const path = `${Date.now()}.${ext}`;
+const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
+const path = `${Date.now()}.${ext}`;
+
 
   statusEl.textContent = "アップロード中…";
 
@@ -189,5 +190,6 @@ loadAudio();
 </body>
 
 </html>
+
 
 
