@@ -84,6 +84,19 @@
       opacity: 0.65;
       margin-bottom: 2px;
     }
+
+#imageList img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+#audioList audio {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
   </style>
 </head>
 
@@ -113,8 +126,71 @@
   </div>
   <div id="chatLog"></div>
 </div>
+<script>
+  /* ===== Media Load ===== */
+
+  async function loadImages() {
+    const { data } = await sb.storage.from("imeges").list("public", {
+      limit: 20,
+      sortBy: { column: "created_at", order: "desc" }
+    });
+
+    const imageList = document.getElementById("imageList");
+    imageList.innerHTML = "";
+
+    data?.forEach(file => {
+      const { data: url } = sb.storage
+        .from("imeges")
+        .getPublicUrl(`public/${file.name}`);
+
+      const img = document.createElement("img");
+      img.src = url.publicUrl;
+      img.onclick = () => window.open(img.src, "_blank"); // 簡易拡大
+
+      imageList.appendChild(img);
+    });
+  }
+
+  async function loadAudio() {
+    const { data } = await sb.storage.from("audio").list("public", {
+      limit: 20,
+      sortBy: { column: "created_at", order: "desc" }
+    });
+
+    const audioList = document.getElementById("audioList");
+    audioList.innerHTML = "";
+
+    data?.forEach(file => {
+      const { data: url } = sb.storage
+        .from("audio")
+        .getPublicUrl(`public/${file.name}`);
+
+      const audio = document.createElement("audio");
+      audio.src = url.publicUrl;
+      audio.controls = true;
+      audio.controlsList = "nodownload noplaybackrate";
+
+      audioList.appendChild(audio);
+    });
+  }
+
+  loadImages();
+  loadAudio();
+</script>
 
 <script>
+
+<!-- ===== Media Viewer ===== -->
+<div class="card">
+  <h2>Images</h2>
+  <div id="imageList"></div>
+</div>
+
+<div class="card">
+  <h2>Audio</h2>
+  <div id="audioList"></div>
+</div>
+  
   /* ===== Supabase 初期化 ===== */
   const sb = window.supabase.createClient(
     "https://erdwkchgsewnzkyriypx.supabase.co",
@@ -208,6 +284,7 @@ const path = `${Date.now()}.${ext}`;
 
 </body>
 </html>
+
 
 
 
