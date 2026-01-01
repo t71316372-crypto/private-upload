@@ -63,7 +63,7 @@
   const uploadBtn = document.getElementById("uploadBtn");
   const statusEl = document.getElementById("status");
 
-  // ★ あなたの Edge Function URL
+  // ★ Edge Function の URL（もう作ったやつ）
   const FUNCTION_URL =
     "https://erdwkchgsewnzkyriypx.supabase.co/functions/v1/clever-responder";
 
@@ -74,30 +74,35 @@
       return;
     }
 
-    statusEl.textContent = "アップロード中…";
     uploadBtn.disabled = true;
+    statusEl.textContent = "アップロード中…";
 
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch(FUNCTION_URL, {
-      method: "POST",
-      body: formData
-    });
+    try {
+      const res = await fetch(FUNCTION_URL, {
+        method: "POST",
+        body: formData
+        // headers は **書かない**
+      });
 
-    uploadBtn.disabled = false;
+      if (!res.ok) {
+        throw new Error("upload failed");
+      }
 
-    if (!res.ok) {
-      const text = await res.text();
-      statusEl.textContent = "失敗: " + text;
-      return;
+      statusEl.textContent = "アップロード成功！";
+      fileInput.value = "";
+    } catch (e) {
+      statusEl.textContent = "失敗しました";
+    } finally {
+      uploadBtn.disabled = false;
     }
-
-    statusEl.textContent = "アップロード成功！";
-    fileInput.value = "";
   };
 </script>
 
+
 </body>
 </html>
+
 
