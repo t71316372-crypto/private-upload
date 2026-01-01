@@ -66,6 +66,8 @@
   // ★ Edge Function の URL（もう作ったやつ）
   const FUNCTION_URL =
     "https://erdwkchgsewnzkyriypx.supabase.co/functions/v1/clever-responder";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";
+
 
   uploadBtn.onclick = async () => {
     const file = fileInput.files[0];
@@ -81,11 +83,14 @@
     formData.append("file", file);
 
     try {
-      const res = await fetch(FUNCTION_URL, {
-        method: "POST",
-        body: formData
-        // headers は **書かない**
-      });
+     const res = await fetch(FUNCTION_URL, {
+  method: "POST",
+  headers: {
+    "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+    "apikey": SUPABASE_ANON_KEY
+  },
+  body: formData
+});
 
       if (!res.ok) {
         throw new Error("upload failed");
@@ -104,5 +109,6 @@
 
 </body>
 </html>
+
 
 
