@@ -2,81 +2,100 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>アップロード（最小）</title>
+  <title>私たち二人だけのアップローダー</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      font-family: system-ui, "Hiragino Sans", sans-serif;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 16px;
+      background: #f7f7f7;
+    }
+    h1 {
+      font-size: 1.4rem;
+      text-align: center;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .row {
+      margin-bottom: 12px;
+    }
+    button {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      background: #2563eb;
+      color: #fff;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.6;
+    }
+  </style>
 </head>
 
 <body>
 
-<h1>アップロード（最小）</h1>
+<h1>私たち二人だけのアップローダー</h1>
 
-<input type="file" id="fileInput">
-<button id="uploadBtn">アップロード</button>
+<div class="card">
+  <div class="row">
+    <input type="file" id="fileInput">
+  </div>
 
-<p id="status"></p>
-
-<!-- ここから script -->
-
-<script>
-  console.log("script OK");
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <div class="row">
+    <button id="uploadBtn">アップロード</button>
+    <span id="status" style="margin-left:8px;font-size:0.9rem;"></span>
+  </div>
+</div>
 
 <script>
-  const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
-  const SUPABASE_ANON_KEY = "（そのまま）";
-
-  const client = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
-
-  console.log("client:", client);
-
   const fileInput = document.getElementById("fileInput");
   const uploadBtn = document.getElementById("uploadBtn");
   const statusEl = document.getElementById("status");
 
-  uploadBtn.addEventListener("click", async () => {
-  console.log("① click event fired");
+  // ★ あなたの Edge Function URL
+  const FUNCTION_URL =
+    "https://erdwkchgsewnzkyriypx.supabase.co/functions/v1/clever-responder";
 
-  const file = fileInput.files[0];
-  if (!file) {
-    statusEl.textContent = "ファイルを選んでください";
-    return;
-  }
+  uploadBtn.onclick = async () => {
+    const file = fileInput.files[0];
+    if (!file) {
+      statusEl.textContent = "ファイルを選んでください";
+      return;
+    }
 
-  statusEl.textContent = "アップロード中…";
+    statusEl.textContent = "アップロード中…";
+    uploadBtn.disabled = true;
 
-  const ext = file.name.split('.').pop();
-  const safeName = `${Date.now()}.${ext}`;
-  const safeFile = new File([file], safeName, { type: file.type });
-  const filePath = `test/${safeName}`;
+    const formData = new FormData();
+    formData.append("file", file);
 
-  console.log("② before upload", {
-    filePath,
-    size: safeFile.size,
-    type: safeFile.type
-  });
+    const res = await fetch(FUNCTION_URL, {
+      method: "POST",
+      body: formData
+    });
 
-  const { error } = await client.storage
-    .from("audio")
-    .upload(filePath, safeFile, { upsert: true });
+    uploadBtn.disabled = false;
 
-  console.log("③ after upload", error);
+    if (!res.ok) {
+      const text = await res.text();
+      statusEl.textContent = "失敗: " + text;
+      return;
+    }
 
-  if (error) {
-    statusEl.textContent = "失敗: " + error.message;
-    console.error(error);
-  } else {
     statusEl.textContent = "アップロード成功！";
-    console.log("uploaded:", filePath);
-  }
-});
-
+    fileInput.value = "";
+  };
 </script>
-
-<!-- ここまで script -->
 
 </body>
 </html>
