@@ -136,11 +136,14 @@ uploadBtn.onclick = async () => {
 
   try {
     const url =
-      `https://erdwkchgsewnzkyriypx.supabase.co/storage/v1/object/public/${bucket}/${path}`;
+      `https://erdwkchgsewnzkyriypx.supabase.co/storage/v1/object/${bucket}/${path}`;
+
+    const formData = new FormData();
+    formData.append("file", file);
 
     const res = await fetch(url, {
-      method: "PUT",
-      body: file
+      method: "POST",
+      body: formData
     });
 
     if (!res.ok) throw new Error("upload failed");
@@ -189,5 +192,6 @@ loadAudio();
 
 </body>
 </html>
+
 
 
