@@ -120,15 +120,12 @@ const audioList = document.getElementById("audioList");
 
 /* upload */
 uploadBtn.onclick = async () => {
-  console.log("UPLOAD CLICKED");
-
   const file = fileInput.files[0];
   if (!file) return;
 
   const isAudio = file.type.startsWith("audio/");
   const bucket = isAudio ? "audio" : "imeges";
 
-  // path は完全 ASCII・file.name 非依存
   const ext =
     file.type === "audio/mpeg" ? "mp3" :
     file.type === "audio/mp4"  ? "m4a" :
@@ -136,22 +133,22 @@ uploadBtn.onclick = async () => {
     "bin";
 
   const path = `${Date.now()}.${ext}`;
-
   statusEl.textContent = "アップロード中…";
 
   try {
-    // 🔑 File を渡さず arrayBuffer で upload
-    const buffer = await file.arrayBuffer();
-    const uint8 = new Uint8Array(buffer);
+    const url =
+      `https://erdwkchgsewnzkyriypx.supabase.co/storage/v1/object/${bucket}/${path}`;
 
-    const { error } = await sb.storage
-      .from(bucket)
-      .upload(path, uint8, {
-        contentType: file.type,
-        upsert: false,
-      });
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer あなたのanonキー"
+        // Content-Type は **指定しない**
+      },
+      body: file
+    });
 
-    if (error) throw error;
+    if (!res.ok) throw new Error("upload failed");
 
     statusEl.textContent = "成功";
     fileInput.value = "";
@@ -160,10 +157,12 @@ uploadBtn.onclick = async () => {
     loadAudio();
 
   } catch (e) {
-    console.error("UPLOAD ERROR:", e);
+    console.error(e);
     statusEl.textContent = "失敗";
   }
 };
+
+
 
 /* images */
 async function loadImages() {
@@ -196,3 +195,4 @@ loadAudio();
 
 </body>
 </html>
+
