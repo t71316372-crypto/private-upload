@@ -160,13 +160,6 @@ const path = `${Date.now()}.${ext}`;
   const sendBtn = document.getElementById("sendBtn");
   const chatLog = document.getElementById("chatLog");
 
-  // Enter送信 / Shift+Enter改行
-  chatInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendBtn.click();
-    }
-  });
 
   sendBtn.onclick = async () => {
     const text = chatInput.value.trim();
@@ -214,5 +207,6 @@ const path = `${Date.now()}.${ext}`;
 
 </body>
 </html>
+
 
 
