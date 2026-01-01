@@ -118,53 +118,59 @@ const statusEl = document.getElementById("status");
 const imageList = document.getElementById("imageList");
 const audioList = document.getElementById("audioList");
 
+// MIMEタイプから拡張子を決定する関数（より安全に）
+const getExt = (type) => {
+  if (type === "audio/mpeg") return "mp3";
+  if (type === "audio/mp4" || type === "audio/x-m4a") return "m4a";
+  if (type.startsWith("image/")) return "jpg";
+  return "bin";
+};
+
 uploadBtn.onclick = async () => {
   const file = fileInput.files[0];
   if (!file) return;
 
   const isAudio = file.type.startsWith("audio/");
-  const bucket = isAudio ? "audio" : "imeges";
+  const bucket = isAudio ? "audio" : "imeges"; // ※既存のバケット名タイポに合わせました
+  
+  const ext = getExt(file.type);
+  const path = `${Date.now()}.${ext}`; // ファイル名は日時のみ（ASCII確定）
 
-  const ext =
-    file.type === "audio/mpeg" ? "mp3" :
-    file.type === "audio/mp4"  ? "m4a" :
-    file.type.startsWith("image/") ? "jpg" :
-    "bin";
-
-  const path = `${Date.now()}.${ext}`;
   statusEl.textContent = "アップロード中…";
 
   try {
-    const url =
-      `https://erdwkchgsewnzkyriypx.supabase.co/storage/v1/object/${bucket}/${path}`;
+    // --- 核心：iOSのエラーを回避するためにバイナリ化 ---
+    const arrayBuffer = await file.arrayBuffer();
+    const cleanBlob = new Blob([arrayBuffer], { type: file.type });
 
-    const formData = new FormData();
-    formData.append("file", file);
+    // Supabase公式のSDKを使用してアップロード
+    const { data, error } = await sb.storage
+      .from(bucket)
+      .upload(path, cleanBlob, {
+        contentType: file.type,
+        upsert: false
+      });
 
-    const res = await fetch(url, {
-      method: "POST",
-      body: formData
-    });
-
-    if (!res.ok) throw new Error("upload failed");
+    if (error) throw error;
 
     statusEl.textContent = "成功";
     fileInput.value = "";
 
+    // リスト再読み込み
     loadImages();
     loadAudio();
 
   } catch (e) {
-    console.error(e);
-    statusEl.textContent = "失敗";
+    console.error("UPLOAD ERROR:", e);
+    statusEl.textContent = "失敗: " + (e.message || "Unknown error");
   }
 };
 
-
-/* images */
+/* 以下、loadImages / loadAudio は変更なしでOK */
 async function loadImages() {
   const { data } = await sb.storage.from("imeges").list();
   imageList.innerHTML = "";
+  data?.sort((a, b) => b.created_at.localeCompare(a.created_at)); // 新しい順に
   data?.forEach(f => {
     const { data: url } = sb.storage.from("imeges").getPublicUrl(f.name);
     const img = document.createElement("img");
@@ -173,10 +179,10 @@ async function loadImages() {
   });
 }
 
-/* audio */
 async function loadAudio() {
   const { data } = await sb.storage.from("audio").list();
   audioList.innerHTML = "";
+  data?.sort((a, b) => b.created_at.localeCompare(a.created_at)); // 新しい順に
   data?.forEach(f => {
     const { data: url } = sb.storage.from("audio").getPublicUrl(f.name);
     const audio = document.createElement("audio");
@@ -192,6 +198,7 @@ loadAudio();
 
 </body>
 </html>
+
 
 
 
