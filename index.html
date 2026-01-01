@@ -121,19 +121,39 @@ const imageList = document.getElementById("imageList");
 const audioList = document.getElementById("audioList");
 
 /* upload */
+/* upload */
 uploadBtn.onclick = async () => {
+  console.log("UPLOAD CLICKED");
+
   const file = fileInput.files[0];
-  if (!file) return;
+  if (!file) {
+    console.log("NO FILE");
+    return;
+  }
 
   const isAudio = file.type.startsWith("audio/");
   const bucket = isAudio ? "audio" : "imeges";
-  const path = `${Date.now()}_${file.name}`;
+
+  // 日本語ファイル名回避
+  const ext = file.name.split(".").pop();
+  const path = `${Date.now()}.${ext}`;
 
   statusEl.textContent = "アップロード中…";
-  const { error } = await sb.storage.from(bucket).upload(path, file);
 
-  statusEl.textContent = error ? "失敗" : "成功";
+  const { data, error } = await sb.storage
+    .from(bucket)
+    .upload(path, file);
+
+  if (error) {
+    console.error("UPLOAD ERROR:", error);
+    statusEl.textContent = "失敗";
+    return;
+  }
+
+  console.log("UPLOAD SUCCESS:", data);
+  statusEl.textContent = "成功";
   fileInput.value = "";
+
   loadImages();
   loadAudio();
 };
@@ -169,4 +189,5 @@ loadAudio();
 </body>
 
 </html>
+
 
