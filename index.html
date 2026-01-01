@@ -84,37 +84,40 @@
   const formData = new FormData();
   formData.append("file", file);
 
-  try {
-   const res = await fetch(
-  "https://erdwkchgsewnzkyriypx.functions.supabase.co/clever-responder",
-  {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8"
-    },
-    body: formData
-  }
-);
+ uploadBtn.onclick = async () => {
+  const file = fileInput.files[0];
+  if (!file) return;
 
+  const isImage = file.type.startsWith("image/");
+  const isAudio = file.type.startsWith("audio/");
 
-    if (!res.ok) {
-      throw new Error("upload failed");
-    }
+  const bucket = isAudio ? "audio" : "imeges";
+  const path = `${Date.now()}_${file.name}`;
 
-    statusEl.textContent = "アップロード成功！";
-    fileInput.value = "";
-  } catch (e) {
-    statusEl.textContent = "失敗しました";
-  } finally {
-    uploadBtn.disabled = false;
+  const { error } = await supabase
+    .storage
+    .from(bucket)
+    .upload(path, file);
+
+  if (error) {
+    statusEl.textContent = "失敗";
+  } else {
+    statusEl.textContent = "成功";
   }
 };
 
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const supabase = supabase.createClient(
+    "https://＜PROJECT-REF＞.supabase.co",
+    "＜ANON_KEY＞"
+  );
 
 
 </body>
 </html>
+
 
 
 
