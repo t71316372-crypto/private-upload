@@ -8,8 +8,6 @@
   <!-- Supabase Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
-
   <!-- Font -->
   <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap" rel="stylesheet">
 
@@ -121,42 +119,50 @@ const imageList = document.getElementById("imageList");
 const audioList = document.getElementById("audioList");
 
 /* upload */
-/* upload */
 uploadBtn.onclick = async () => {
   console.log("UPLOAD CLICKED");
 
   const file = fileInput.files[0];
-  if (!file) {
-    console.log("NO FILE");
-    return;
-  }
+  if (!file) return;
 
   const isAudio = file.type.startsWith("audio/");
   const bucket = isAudio ? "audio" : "imeges";
 
-  // 日本語ファイル名回避
-const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
-const path = `${Date.now()}.${ext}`;
+  // path は完全 ASCII・file.name 非依存
+  const ext =
+    file.type === "audio/mpeg" ? "mp3" :
+    file.type === "audio/mp4"  ? "m4a" :
+    file.type.startsWith("image/") ? "jpg" :
+    "bin";
 
+  const path = `${Date.now()}.${ext}`;
 
   statusEl.textContent = "アップロード中…";
 
-  const { data, error } = await sb.storage
-    .from(bucket)
-    .upload(path, file);
+  try {
+    // 🔑 File を渡さず arrayBuffer で upload
+    const buffer = await file.arrayBuffer();
+    const uint8 = new Uint8Array(buffer);
 
-  if (error) {
-    console.error("UPLOAD ERROR:", error);
+    const { error } = await sb.storage
+      .from(bucket)
+      .upload(path, uint8, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (error) throw error;
+
+    statusEl.textContent = "成功";
+    fileInput.value = "";
+
+    loadImages();
+    loadAudio();
+
+  } catch (e) {
+    console.error("UPLOAD ERROR:", e);
     statusEl.textContent = "失敗";
-    return;
   }
-
-  console.log("UPLOAD SUCCESS:", data);
-  statusEl.textContent = "成功";
-  fileInput.value = "";
-
-  loadImages();
-  loadAudio();
 };
 
 /* images */
@@ -187,9 +193,6 @@ async function loadAudio() {
 loadImages();
 loadAudio();
 </script>
+
 </body>
-
 </html>
-
-
-
