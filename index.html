@@ -132,6 +132,8 @@ const audioList = document.getElementById("audioList");
     formData.append("file", file);
     formData.append("bucket", bucket);
 
+   console.log("FETCH BEFORE");
+
     const res = await fetch(
       "https://erdwkchgsewnzkyriypx.supabase.co/functions/v1/upload",
       {
@@ -188,6 +190,7 @@ loadAudio();
 
 </body>
 </html>
+
 
 
 
