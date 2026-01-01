@@ -69,40 +69,49 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";
 
 
-  uploadBtn.onclick = async () => {
-    const file = fileInput.files[0];
-    if (!file) {
-      statusEl.textContent = "ファイルを選んでください";
-      return;
-    }
+ uploadBtn.onclick = async (event) => {
+  event.preventDefault();
 
-    uploadBtn.disabled = true;
-    statusEl.textContent = "アップロード中…";
+  const file = fileInput.files[0];
+  if (!file) {
+    statusEl.textContent = "ファイルを選んでください";
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append("file", file);
+  uploadBtn.disabled = true;
+  statusEl.textContent = "アップロード中…";
 
-    try {
-     const res = await
-      
+  const formData = new FormData();
+  formData.append("file", file);
 
-      if (!res.ok) {
-        throw new Error("upload failed");
+  try {
+    const res = await fetch(
+      "https://erdwkchgsewnzkyriypx.functions.supabase.co/clever-responder",
+      {
+        method: "POST",
+        body: formData
       }
+    );
 
-      statusEl.textContent = "アップロード成功！";
-      fileInput.value = "";
-    } catch (e) {
-      statusEl.textContent = "失敗しました";
-    } finally {
-      uploadBtn.disabled = false;
+    if (!res.ok) {
+      throw new Error("upload failed");
     }
-  };
+
+    statusEl.textContent = "アップロード成功！";
+    fileInput.value = "";
+  } catch (e) {
+    statusEl.textContent = "失敗しました";
+  } finally {
+    uploadBtn.disabled = false;
+  }
+};
+
 </script>
 
 
 </body>
 </html>
+
 
 
 
