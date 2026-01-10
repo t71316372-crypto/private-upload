@@ -44,10 +44,12 @@ async function loadImages() {
         "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
         "apikey": SUPABASE_ANON_KEY
       },
-      body: JSON.stringify({
-        prefix: "",
-        limit: 100,
-        offset: 0
+    body: JSON.stringify({
+  prefix: "public/",
+  limit: 100,
+  offset: 0
+})
+
       })
     }
   );
