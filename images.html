@@ -29,45 +29,49 @@
   <h1>Images</h1>
   <div id="grid" class="grid"></div>
 
-  <script>
-    const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
-    const SUPABASE_ANON_KEY = " eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";   
-    const BUCKET = "imeges";
+ <script>
+const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
+const SUPABASE_ANON_KEY = "ここにあなたの anon key";
+const BUCKET = "imeges";
 
-    async function loadImages() {
-      const res = await fetch(
-        `${SUPABASE_URL}/storage/v1/object/list/${BUCKET}`,
-        {
-          method: "POST",
-       headers: {
-  "Content-Type": "application/json",
-  "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-  "apikey": SUPABASE_ANON_KEY
-},
-
-
-          body: JSON.stringify({
-            limit: 100,
-            offset: 0,
-            sortBy: { column: "created_at", order: "desc" },
-          }),
-        }
-      );
-
-      const files = await res.json();
-      const grid = document.getElementById("grid");
-
-      files.forEach(file => {
-        if (!file.name.match(/\.(jpg|jpeg|png|webp)$/i)) return;
-
-        const img = document.createElement("img");
-        img.src = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${file.name}`;
-        img.onclick = () => window.open(img.src, "_blank");
-        grid.appendChild(img);
-      });
+async function loadImages() {
+  const res = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/list/${BUCKET}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        "apikey": SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({
+        prefix: "",
+        limit: 100,
+        offset: 0
+      })
     }
+  );
 
-    loadImages();
-  </script>
+  const result = await res.json();
+
+  // ここで配列かどうかを保証
+  const files = Array.isArray(result) ? result : [];
+
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  files.forEach(file => {
+    if (!file.name.match(/\.(jpg|jpeg|png|webp|png)$/i)) return;
+
+    const img = document.createElement("img");
+    img.src = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${file.name}`;
+    img.onclick = () => window.open(img.src, "_blank");
+    grid.appendChild(img);
+  });
+}
+
+loadImages();
+</script>
+
 </body>
 </html>
