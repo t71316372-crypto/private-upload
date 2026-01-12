@@ -1,80 +1,15 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Images</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      margin: 20px;
-    }
-    h1 {
-      text-align: center;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 12px;
-      margin-top: 20px;
-    }
-    .grid img {
-      width: 100%;
-      height: auto;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-  </style>
 </head>
 <body>
-  <h1>Images</h1>
-  <div id="grid" class="grid"></div>
 
- <script>
+<h1>Images</h1>
+
+<script>
 console.log("SCRIPT START");
-
-const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";
-const BUCKET = "imeges";
-
-async function loadImages() {
-  const res = await fetch(
-    `${SUPABASE_URL}/storage/v1/object/list/${BUCKET}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-        "apikey": SUPABASE_ANON_KEY
-      },
-    body: JSON.stringify({
-  prefix: "public/",
-  limit: 100,
-  offset: 0
-})
-
-      })
-    }
-  );
-
-  const result = await res.json();
-
-  // ここで配列かどうかを保証
-  const files = Array.isArray(result) ? result : [];
-
-  const grid = document.getElementById("grid");
-  grid.innerHTML = "";
-
-  files.forEach(file => {
-    if (!file.name.match(/\.(jpg|jpeg|png|webp|png)$/i)) return;
-
-    const img = document.createElement("img");
-    img.src = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${file.name}`;
-    img.onclick = () => window.open(img.src, "_blank");
-    grid.appendChild(img);
-  });
-}
-
-loadImages();
 </script>
 
 </body>
