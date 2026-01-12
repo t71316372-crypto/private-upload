@@ -6,4 +6,32 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const BUCKET = "imeges";
 
 console.log("CONFIG OK");
+
+async function testList() {
+  console.log("LIST START");
+
+  const res = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/list/${BUCKET}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        "apikey": SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({
+        prefix: "public/",
+        limit: 100,
+        offset: 0
+      })
+    }
+  );
+
+  console.log("STATUS", res.status);
+
+  const text = await res.text();
+  console.log("RAW RESPONSE", text);
+}
+
+testList();
 </script>
