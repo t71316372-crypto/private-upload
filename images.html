@@ -27,10 +27,11 @@ async function testList() {
         "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
         "apikey": SUPABASE_ANON_KEY
       },
-      body: JSON.stringify({
-        prefix: "public",
-        limit: 100
-      })
+    body: JSON.stringify({
+  prefix: "public/",
+  limit: 100
+})
+
     }
   );
 
