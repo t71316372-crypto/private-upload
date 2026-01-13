@@ -3,32 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <title>Images Test</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<script>
-console.log("SCRIPT START FIXED");
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+console.log("SCRIPT START CLEAN");
 
 const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
 
-// supabase は上書きしない。別名を使う
-const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-async function testList() {
-  console.log("LIST START FIXED");
+console.log("LIST START CLEAN");
 
-  const { data, error } = await client
-    .storage
-    .from("images")
-    .list("", { limit: 100 });
+const { data, error } = await client
+  .storage
+  .from("images")
+  .list("", { limit: 100 });
 
-  console.log("DATA", data);
-  console.log("ERROR", error);
-}
-
-testList();
+console.log("DATA", data);
+console.log("ERROR", error);
 </script>
 
 </body>
