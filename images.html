@@ -2,29 +2,61 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Final Fix</title>
+  <title>Images Display Test</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* 画像をきれいに並べるためのスタイル */
+    #displayArea img {
+      width: 200px;
+      height: auto;
+      margin: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+  </style>
 </head>
 <body>
-  <h1>Supabase List Test</h1>
-  <script>
-    // 競合を避けるために変数名を 'sb' に変更
+  <h1>Supabase 画像表示テスト</h1>
+  <div id="displayArea"></div> <script>
     const URL = "https://erdwkchgsewnzkyriypx.supabase.co";
     const KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
-
-    // ここが10行目：絶対に 'const supabase' と書かない！
     const sb = window.supabase.createClient(URL, KEY);
+
+    // バケット名をここで指定（管理画面の名前と一致させてください）
+    const BUCKET_NAME = "images"; 
 
     async function run() {
       console.log("TEST START");
-      const { data, error } = await sb.storage.from("images").list();
+      const { data, error } = await sb.storage.from(BUCKET_NAME).list();
       
       if (error) {
         console.error("ERROR:", error);
-      } else {
-        console.log("DATA SUCCESS:", data);
+        return;
       }
+      
+      console.log("DATA SUCCESS:", data);
+      const displayArea = document.getElementById("displayArea");
+
+      if (data.length === 0) {
+        displayArea.innerHTML = "<p>バケット内にファイルが見つかりません。</p>";
+        return;
+      }
+
+      // 取得したデータ（ファイル一覧）をループして画像を表示
+      data.forEach(file => {
+        // .emptyKeep などのシステムファイルを除外
+        if (file.name === ".emptyKeep") return;
+
+        // 公開URLを取得
+        const { data: urlData } = sb.storage.from(BUCKET_NAME).getPublicUrl(file.name);
+        
+        // imgタグを作成して画面に追加
+        const img = document.createElement("img");
+        img.src = urlData.publicUrl;
+        displayArea.appendChild(img);
+      });
     }
+
     run();
   </script>
 </body>
