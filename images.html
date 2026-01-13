@@ -2,40 +2,30 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Images Test - Debug</title>
+  <title>Final Fix</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+  <h1>Supabase List Test</h1>
+  <script>
+    // 競合を避けるために変数名を 'sb' に変更
+    const URL = "https://erdwkchgsewnzkyriypx.supabase.co";
+    const KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
 
-<script>
-console.log("SCRIPT START");
+    // ここが10行目：絶対に 'const supabase' と書かない！
+    const sb = window.supabase.createClient(URL, KEY);
 
-const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
-const SUPABASE_KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
-
-// ★修正: 変数名を 'supabase' ではなく 'client' に変更
-// これでライブラリ名と衝突しなくなります
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-async function testList() {
-  console.log("LIST START");
-
-  // 変数名を 'client' に合わせたので、こちらでも client を使う
-  const { data, error } = await client
-    .storage
-    .from("images")
-    .list("", { limit: 100 });
-
-  console.log("--- RESULT ---");
-  if (error) {
-    console.error("ERROR:", error);
-  } else {
-    console.log("DATA (Found Files):", data);
-  }
-}
-
-testList();
-</script>
-
+    async function run() {
+      console.log("TEST START");
+      const { data, error } = await sb.storage.from("images").list();
+      
+      if (error) {
+        console.error("ERROR:", error);
+      } else {
+        console.log("DATA SUCCESS:", data);
+      }
+    }
+    run();
+  </script>
 </body>
 </html>
