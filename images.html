@@ -11,17 +11,17 @@
 console.log("SCRIPT START");
 
 const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
-const SUPABASE_KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J"; // あなたのキー
+const SUPABASE_KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
 
-// 2. 衝突を避けるため、変数名を 'client' など別の名前にする
-// 右辺の 'window.supabase' は読み込んだライブラリを指す
-const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// ★修正ポイント：変数名を supabase 以外（ここでは sb）にする
+// 右辺は window.supabase（ライブラリ本体）を参照する
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function testList() {
   console.log("LIST START");
 
-  // 作成した 'client' を使って操作する
-  const { data, error } = await client
+  // ここも sb に変える
+  const { data, error } = await sb
     .storage
     .from("images")
     .list("", { limit: 100 });
