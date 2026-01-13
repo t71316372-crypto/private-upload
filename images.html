@@ -8,16 +8,15 @@
 <body>
 
 <script>
-console.log("SCRIPT START v2");
+console.log("SCRIPT START v4");
 
 const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
 
-// window.supabase から client を作る
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function testList() {
-  console.log("LIST START v2");
+  console.log("LIST START v4");
 
   const { data, error } = await client
     .storage
