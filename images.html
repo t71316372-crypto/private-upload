@@ -3,28 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <title>Images Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
-console.log("SCRIPT START FINAL");
+<script>
+console.log("SCRIPT START");
 
 const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
 
-const client = createClient(SUPABASE_URL, SUPABASE_KEY);
+/* ここが修正点。supabaseを再定義しない */
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-console.log("LIST START FINAL");
+async function testList() {
+  console.log("LIST START");
 
-const { data, error } = await client
-  .storage
-  .from("images")
-  .list("", { limit: 100 });
+  const { data, error } = await client
+    .storage
+    .from("images")
+    .list("", { limit: 100 });
 
-console.log("DATA", data);
-console.log("ERROR", error);
+  console.log("DATA", data);
+  console.log("ERROR", error);
+}
+
+testList();
 </script>
 
 </body>
