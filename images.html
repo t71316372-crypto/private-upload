@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Images Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -10,35 +11,20 @@
 console.log("SCRIPT START");
 
 const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
-const BUCKET = "images";
+const SUPABASE_KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
 
-console.log("CONFIG OK");
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function testList() {
   console.log("LIST START");
 
-  const res = await fetch(
-    `${https://erdwkchgsewnzkyriypx.supabase.co}/storage/v1/object/list/${BUCKET}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J}`,
-        "apikey": sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J
-      },
-body: JSON.stringify({
-  prefix: "",
-  limit: 100
-})
+  const { data, error } = await supabase
+    .storage
+    .from("images")
+    .list("", { limit: 100 });
 
-
-    }
-  );
-
-  console.log("STATUS", res.status);
-  const data = await res.json();
-  console.log("RAW RESPONSE", data);
+  console.log("DATA", data);
+  console.log("ERROR", error);
 }
 
 testList();
