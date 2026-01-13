@@ -56,7 +56,26 @@
         displayArea.appendChild(img);
       });
     }
+async function run() {
+      console.log("--- DEBUG START ---");
+      
+      // 1. バケット自体の情報を取得（権限チェック）
+      const { data: bucketInfo, error: bucketError } = await sb.storage.getBucket(BUCKET_NAME);
+      console.log("BUCKET INFO:", bucketInfo, bucketError);
 
+      // 2. リスト取得（パスを変えて試す）
+      console.log("LISTING PATH: '' (root)");
+      const { data, error } = await sb.storage.from(BUCKET_NAME).list("");
+      
+      console.log("RESULT DATA:", data);
+      if (error) console.error("LIST ERROR:", error);
+
+      if (data && data.length > 0) {
+        console.log("SUCCESS: Found", data.length, "files");
+      } else {
+        console.log("WARNING: No files found. Check folder names in Supabase Dashboard.");
+      }
+    }
     run();
   </script>
 </body>
