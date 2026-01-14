@@ -2,80 +2,47 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Images Display Test</title>
+  <title>Supabase Debug - Bucket Check</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    /* 画像をきれいに並べるためのスタイル */
-    #displayArea img {
-      width: 200px;
-      height: auto;
-      margin: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-  </style>
 </head>
 <body>
-  <h1>Supabase 画像表示テスト</h1>
-  <div id="displayArea"></div> <script>
+  <h1>Supabase 接続デバッグ</h1>
+  <p>コンソール（F12）を確認してください。</p>
+
+  <script>
     const URL = "https://erdwkchgsewnzkyriypx.supabase.co";
     const KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
     const sb = window.supabase.createClient(URL, KEY);
 
-    // バケット名をここで指定（管理画面の名前と一致させてください）
+    // ★ ここを管理画面の表記と完全に一致させる
     const BUCKET_NAME = "images"; 
 
     async function run() {
-      console.log("TEST START");
-      const { data, error } = await sb.storage.from(BUCKET_NAME).list();
-      
-      if (error) {
-        console.error("ERROR:", error);
-        return;
-      }
-      
-      console.log("DATA SUCCESS:", data);
-      const displayArea = document.getElementById("displayArea");
-
-      if (data.length === 0) {
-        displayArea.innerHTML = "<p>バケット内にファイルが見つかりません。</p>";
-        return;
-      }
-
-      // 取得したデータ（ファイル一覧）をループして画像を表示
-      data.forEach(file => {
-        // .emptyKeep などのシステムファイルを除外
-        if (file.name === ".emptyKeep") return;
-
-        // 公開URLを取得
-        const { data: urlData } = sb.storage.from(BUCKET_NAME).getPublicUrl(file.name);
-        
-        // imgタグを作成して画面に追加
-        const img = document.createElement("img");
-        img.src = urlData.publicUrl;
-        displayArea.appendChild(img);
-      });
-    }
-async function run() {
       console.log("--- DEBUG START ---");
       
-      // 1. バケット自体の情報を取得（権限チェック）
-      const { data: bucketInfo, error: bucketError } = await sb.storage.getBucket(BUCKET_NAME);
-      console.log("BUCKET INFO:", bucketInfo, bucketError);
+      try {
+        // 1. バケット自体の情報を取得（名前が合っているか、公開設定かチェック）
+        const { data: bucketInfo, error: bucketError } = await sb.storage.getBucket(BUCKET_NAME);
+        console.log("1. BUCKET INFO:", bucketInfo);
+        if (bucketError) console.error("BUCKET ERROR:", bucketError);
 
-      // 2. リスト取得（パスを変えて試す）
-      console.log("LISTING PATH: '' (root)");
-      const { data, error } = await sb.storage.from(BUCKET_NAME).list("");
-      
-      console.log("RESULT DATA:", data);
-      if (error) console.error("LIST ERROR:", error);
+        // 2. ルートディレクトリをリスト取得
+        console.log("2. LISTING PATH: '' (root)");
+        const { data: rootData, error: rootError } = await sb.storage.from(BUCKET_NAME).list("");
+        console.log("ROOT DATA:", rootData);
 
-      if (data && data.length > 0) {
-        console.log("SUCCESS: Found", data.length, "files");
-      } else {
-        console.log("WARNING: No files found. Check folder names in Supabase Dashboard.");
+        // 3. もし空なら、仮に 'public/' フォルダの中も探してみる
+        if (rootData && rootData.length === 0) {
+          console.log("3. LISTING PATH: 'public/' (Trying subfolder)");
+          const { data: subData } = await sb.storage.from(BUCKET_NAME).list("public");
+          console.log("SUBFOLDER DATA:", subData);
+        }
+
+      } catch (err) {
+        console.error("CRITICAL ERROR:", err);
       }
     }
+
     run();
   </script>
 </body>
