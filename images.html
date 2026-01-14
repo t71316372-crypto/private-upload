@@ -2,48 +2,54 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Supabase Debug - Bucket Check</title>
+  <title>Supabase Gallery</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #f4f4f4; }
+    .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 20px; }
+    .gallery img { width: 250px; height: auto; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background: white; }
+  </style>
 </head>
 <body>
-  <h1>Supabase 接続デバッグ</h1>
-  <p>コンソール（F12）を確認してください。</p>
+  <h1>画像一覧</h1>
+  <div id="gallery" class="gallery">読み込み中...</div>
 
   <script>
     const URL = "https://erdwkchgsewnzkyriypx.supabase.co";
     const KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
     const sb = window.supabase.createClient(URL, KEY);
 
-    // ★ ここを管理画面の表記と完全に一致させる
-    const BUCKET_NAME = "images"; 
-
-    async function run() {
-      console.log("--- DEBUG START ---");
+    async function displayImages() {
+      const gallery = document.getElementById("gallery");
       
-      try {
-        // 1. バケット自体の情報を取得（名前が合っているか、公開設定かチェック）
-        const { data: bucketInfo, error: bucketError } = await sb.storage.getBucket(BUCKET_NAME);
-        console.log("1. BUCKET INFO:", bucketInfo);
-        if (bucketError) console.error("BUCKET ERROR:", bucketError);
+      // 1. ファイル一覧を取得
+      const { data, error } = await sb.storage.from("images").list();
 
-        // 2. ルートディレクトリをリスト取得
-        console.log("2. LISTING PATH: '' (root)");
-        const { data: rootData, error: rootError } = await sb.storage.from(BUCKET_NAME).list("");
-        console.log("ROOT DATA:", rootData);
-
-        // 3. もし空なら、仮に 'public/' フォルダの中も探してみる
-        if (rootData && rootData.length === 0) {
-          console.log("3. LISTING PATH: 'public/' (Trying subfolder)");
-          const { data: subData } = await sb.storage.from(BUCKET_NAME).list("public");
-          console.log("SUBFOLDER DATA:", subData);
-        }
-
-      } catch (err) {
-        console.error("CRITICAL ERROR:", err);
+      if (error) {
+        gallery.innerHTML = "エラー: " + error.message;
+        return;
       }
+
+      if (!data || data.length === 0) {
+        gallery.innerHTML = "バケットは空です。";
+        return;
+      }
+
+      gallery.innerHTML = ""; // 読み込み中表示をクリア
+
+      // 2. 各ファイルの公開URLを取得して表示
+      data.forEach(file => {
+        if (file.name === ".emptyKeep") return; // システムファイル除外
+
+        const { data: urlData } = sb.storage.from("images").getPublicUrl(file.name);
+        
+        const img = document.createElement("img");
+        img.src = urlData.publicUrl;
+        gallery.appendChild(img);
+      });
     }
 
-    run();
+    displayImages();
   </script>
 </body>
 </html>
