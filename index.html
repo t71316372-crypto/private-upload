@@ -123,7 +123,7 @@ const audioList = document.getElementById("audioList");
   if (!file) return;
 
   const isAudio = file.type.startsWith("audio/");
-  const bucket = isAudio ? "audio" : "imeges";
+  const bucket = isAudio ? "audio" : "images";
 
   statusEl.textContent = "アップロード中…";
 
@@ -161,10 +161,10 @@ const audioList = document.getElementById("audioList");
 
 /* images */
 async function loadImages() {
-  const { data } = await sb.storage.from("imeges").list();
+  const { data } = await sb.storage.from("images").list();
   imageList.innerHTML = "";
   data?.forEach(f => {
-    const { data: url } = sb.storage.from("imeges").getPublicUrl(f.name);
+    const { data: url } = sb.storage.from("images").getPublicUrl(f.name);
     const img = document.createElement("img");
     img.src = url.publicUrl;
     imageList.appendChild(img);
@@ -190,6 +190,7 @@ loadAudio();
 
 </body>
 </html>
+
 
 
 
