@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+-<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -15,33 +15,38 @@
   <div id="gallery" class="gallery">読み込み中...</div>
 
   <script>
-    const URL = "https://erdwkchgsewnzkyriypx.supabase.co";
-    const KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
-    const sb = window.supabase.createClient(URL, KEY);
+    // ★ここを正確にコピーしてください
+    const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
+
+    // 接続クライアントの作成
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function displayImages() {
       const gallery = document.getElementById("gallery");
-      
-      // 1. ファイル一覧を取得
-      const { data, error } = await sb.storage.from("images").list();
+      console.log("Fetching images from:", SUPABASE_URL);
+
+      // 1. imagesバケットからファイル一覧を取得
+      const { data, error } = await client.storage.from("images").list();
 
       if (error) {
-        gallery.innerHTML = "エラー: " + error.message;
+        console.error("List error:", error);
+        gallery.innerHTML = "エラーが発生しました: " + error.message;
         return;
       }
 
       if (!data || data.length === 0) {
-        gallery.innerHTML = "バケットは空です。";
+        gallery.innerHTML = "画像が見つかりません。バケットが空か、ポリシーの設定が必要です。";
         return;
       }
 
-      gallery.innerHTML = ""; // 読み込み中表示をクリア
+      gallery.innerHTML = ""; // 読み込み中表示を消す
 
-      // 2. 各ファイルの公開URLを取得して表示
+      // 2. ループして画像を表示
       data.forEach(file => {
-        if (file.name === ".emptyKeep") return; // システムファイル除外
+        if (file.name === ".emptyKeep") return;
 
-        const { data: urlData } = sb.storage.from("images").getPublicUrl(file.name);
+        const { data: urlData } = client.storage.from("images").getPublicUrl(file.name);
         
         const img = document.createElement("img");
         img.src = urlData.publicUrl;
@@ -52,4 +57,4 @@
     displayImages();
   </script>
 </body>
-</html>
+</html-
