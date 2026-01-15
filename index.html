@@ -1,197 +1,146 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>Private Upload & Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <title>二人だけの記録空間</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap" rel="stylesheet">
 
-  <!-- Supabase Client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: "Zen Kurenaido", serif; /* コンセプトに合わせたフォント */
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #fdfaf7; /* 少し温かみのある白 */
+      color: #444;
+    }
 
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap" rel="stylesheet">
+    h1 { text-align: center; font-weight: normal; margin-bottom: 30px; }
+    h2 { font-weight: normal; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
 
-  <style>
-    body {
-      font-family: "Zen Kurenaido", system-ui, sans-serif;
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 16px;
-      background: #f7f7f7;
-    }
+    .card {
+      background: #fff;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 16px;
-    }
+    /* リンクをボタンのように見せる */
+    .nav-link {
+      display: inline-block;
+      margin-top: 10px;
+      color: #8b5cf6;
+      text-decoration: none;
+      font-size: 1.1rem;
+    }
 
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-    }
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      border: 1px solid #eee;
+      border-radius: 10px;
+      padding: 10px;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
 
-    button {
-      padding: 8px 16px;
-      border-radius: 999px;
-      border: none;
-      background: #2563eb;
-      color: #fff;
-      cursor: pointer;
-      font-family: inherit;
-    }
+    button {
+      margin-top: 10px;
+      padding: 8px 20px;
+      border-radius: 20px;
+      border: none;
+      background: #a78bfa;
+      color: white;
+      cursor: pointer;
+      font-family: inherit;
+    }
 
-    textarea {
-      width: 100%;
-      min-height: 96px;
-      resize: vertical;
-      padding: 10px;
-      font-family: inherit;
-    }
-
-    #chatLog .msg {
-      background: #f1f5f9;
-      padding: 8px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-    }
-
-    #chatLog .stamp {
-      font-size: 0.75rem;
-      opacity: 0.6;
-      margin-bottom: 4px;
-    }
-
-    #imageList img {
-      max-width: 100%;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      cursor: pointer;
-    }
-
-    #audioList audio {
-      width: 100%;
-      margin-bottom: 8px;
-    }
-  </style>
+    #chatLog { margin-top: 15px; }
+    .msg { background: #fef2f2; padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 0.95rem; }
+    
+    .preview-list img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; margin: 5px; }
+  </style>
 </head>
 
 <body>
 
-<h1>私たち二人だけのアップローダー</h1>
+<h1>二人だけの記録空間</h1>
 
 <div class="card">
-  <input type="file" id="fileInput">
-  <br><br>
-  <button id="uploadBtn">アップロード</button>
-  <span id="status"></span>
+  <h2>思い出を預ける</h2>
+  <input type="file" id="fileInput">
+  <button id="uploadBtn">アップロード</button>
+  <p id="status" style="font-size: 0.8rem;"></p>
 </div>
 
 <div class="card">
-  <textarea id="chatInput" placeholder="メッセージを入力"></textarea>
-  <br><br>
-  <button id="sendBtn">送信</button>
-  <div id="chatLog"></div>
+  <h2>今の気持ち</h2>
+  <textarea id="chatInput" placeholder="ここになんでも書いてね"></textarea>
+  <button id="sendBtn">残しておく</button>
+  <div id="chatLog"></div>
 </div>
 
 <div class="card">
-  <h2>Images</h2>
-  <div id="imageList"></div>
-</div>
-
-<div class="card">
-  <h2>Audio</h2>
-  <div id="audioList"></div>
+  <h2>アルバムと声</h2>
+  <p>これまでの写真や、録音した声はこちらから。</p>
+  <a href="image.html" class="nav-link">・ 写真（Images）を見る</a><br>
+  <a href="audio.html" class="nav-link">・ 声（Audio）を聴く</a>
 </div>
 
 <script>
-const sb = window.supabase.createClient(
-  "https://erdwkchgsewnzkyriypx.supabase.co",
-  "あなたのanonキー"
-);
+// --- 設定 ---
+const URL = "https://erdwkchgsewnzkyriypx.supabase.co";
+const KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J"; // あなたのキーに入れ替えました
+const sb = window.supabase.createClient(URL, KEY);
 
+// --- 要素の取得 ---
 const fileInput = document.getElementById("fileInput");
 const uploadBtn = document.getElementById("uploadBtn");
 const statusEl = document.getElementById("status");
-const imageList = document.getElementById("imageList");
-const audioList = document.getElementById("audioList");
+const chatInput = document.getElementById("chatInput");
+const sendBtn = document.getElementById("sendBtn");
+const chatLog = document.getElementById("chatLog");
 
- uploadBtn.onclick = async () => {
+// --- 1. メッセージ送信機能（とりあえず画面に出すだけ） ---
+sendBtn.onclick = () => {
+  const text = chatInput.value.trim();
+  if (!text) return;
+
+  const msgDiv = document.createElement("div");
+  msgDiv.className = "msg";
+  msgDiv.textContent = text;
+  chatLog.prepend(msgDiv); // 新しいものを上に
+  chatInput.value = "";
+};
+
+// --- 2. アップロード機能 ---
+uploadBtn.onclick = async () => {
   const file = fileInput.files[0];
   if (!file) return;
 
   const isAudio = file.type.startsWith("audio/");
   const bucket = isAudio ? "audio" : "images";
-
-  statusEl.textContent = "アップロード中…";
+  
+  statusEl.textContent = "預かり中...";
 
   try {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("bucket", bucket);
+    // ファイル名が重複しないよう、現在時刻を付与
+    const fileName = `${Date.now()}_${file.name}`;
+    const { data, error } = await sb.storage.from(bucket).upload(fileName, file);
 
-   console.log("FETCH BEFORE");
+    if (error) throw error;
 
-    const res = await fetch(
-      "https://erdwkchgsewnzkyriypx.supabase.co/functions/v1/upload",
-      {
-        method: "POST",
-        body: formData
-      }
-    );
-
-    if (!res.ok) throw new Error("upload failed");
-
-    statusEl.textContent = "成功";
+    statusEl.textContent = "無事に保存しました";
     fileInput.value = "";
-
-    loadImages();
-    loadAudio();
-
   } catch (e) {
     console.error(e);
-    statusEl.textContent = "失敗";
+    statusEl.textContent = "失敗してしまいました";
   }
 };
-
-
-
-
-/* images */
-async function loadImages() {
-  const { data } = await sb.storage.from("images").list();
-  imageList.innerHTML = "";
-  data?.forEach(f => {
-    const { data: url } = sb.storage.from("images").getPublicUrl(f.name);
-    const img = document.createElement("img");
-    img.src = url.publicUrl;
-    imageList.appendChild(img);
-  });
-}
-
-/* audio */
-async function loadAudio() {
-  const { data } = await sb.storage.from("audio").list();
-  audioList.innerHTML = "";
-  data?.forEach(f => {
-    const { data: url } = sb.storage.from("audio").getPublicUrl(f.name);
-    const audio = document.createElement("audio");
-    audio.src = url.publicUrl;
-    audio.controls = true;
-    audioList.appendChild(audio);
-  });
-}
-
-loadImages();
-loadAudio();
 </script>
 
 </body>
 </html>
-
-
-
-
-
