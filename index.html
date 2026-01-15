@@ -11,6 +11,18 @@
     h1 { text-align: center; font-weight: normal; margin-bottom: 30px; }
     .card { background: #fff; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
     .nav-link { display: inline-block; margin-top: 10px; color: #8b5cf6; text-decoration: none; font-size: 1.1rem; }
+    
+    /* セレクトボックスのデザイン */
+    select { 
+      width: 100%; 
+      padding: 10px; 
+      border-radius: 10px; 
+      border: 1px solid #eee; 
+      font-family: inherit; 
+      margin-bottom: 10px;
+      background-color: #f9f9f9;
+    }
+    
     textarea { width: 100%; min-height: 80px; border: 1px solid #eee; border-radius: 10px; padding: 10px; font-family: inherit; box-sizing: border-box; }
     button { margin-top: 10px; padding: 8px 20px; border-radius: 20px; border: none; background: #a78bfa; color: white; cursor: pointer; font-family: inherit; }
     #chatLog { margin-top: 15px; }
@@ -24,7 +36,7 @@
 
   <div class="card">
     <h2>今の気持ち</h2>
-    <select id="nameSelect" style="font-family: inherit; padding: 5px; border-radius: 10px; margin-bottom: 10px;">
+    <select id="nameSelect">
       <option value="まさ">まさ</option>
       <option value="パートナー">パートナー</option>
     </select>
@@ -49,7 +61,7 @@
     const chatLog = document.getElementById("chatLog");
     const nameSelect = document.getElementById("nameSelect");
 
-    // --- 過去のメッセージを読み込む ---
+    // --- メッセージ読み込み ---
     async function loadMessages() {
       const { data, error } = await sb
         .from('messages')
@@ -73,7 +85,7 @@
       });
     }
 
-    // --- メッセージを保存する ---
+    // --- メッセージ保存 ---
     sendBtn.onclick = async () => {
       const content = chatInput.value.trim();
       const userName = nameSelect.value;
@@ -84,7 +96,7 @@
         .insert([{ text: content, sender_name: userName }]);
 
       if (error) {
-        alert("保存に失敗しました: " + error.message);
+        alert("保存に失敗しました。RLSポリシーを確認してください。");
       } else {
         chatInput.value = "";
         loadMessages(); 
