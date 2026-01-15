@@ -1,51 +1,97 @@
-<div class="card">
-  <h2>今の気持ち</h2>
-  <select id="nameSelect" style="font-family: inherit; padding: 5px; border-radius: 10px; margin-bottom: 10px;">
-    <option value="自分">自分</option>
-    <option value="相手の名前">相手の名前</option>
-  </select>
-  
-  <textarea id="chatInput" placeholder="ここになんでも書いてね"></textarea>
-  <button id="sendBtn">残しておく</button>
-  
-  <div id="chatLog"></div>
-</div>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>二人だけの記録空間</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: "Zen Kurenaido", serif; max-width: 720px; margin: 0 auto; padding: 20px; background: #fdfaf7; color: #444; }
+    h1 { text-align: center; font-weight: normal; margin-bottom: 30px; }
+    .card { background: #fff; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+    .nav-link { display: inline-block; margin-top: 10px; color: #8b5cf6; text-decoration: none; font-size: 1.1rem; }
+    textarea { width: 100%; min-height: 80px; border: 1px solid #eee; border-radius: 10px; padding: 10px; font-family: inherit; box-sizing: border-box; }
+    button { margin-top: 10px; padding: 8px 20px; border-radius: 20px; border: none; background: #a78bfa; color: white; cursor: pointer; font-family: inherit; }
+    #chatLog { margin-top: 15px; }
+    .msg { background: #fef2f2; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #fca5a5; }
+    .name-tag { font-size: 0.75rem; color: #8b5cf6; margin-bottom: 4px; font-weight: bold; }
+  </style>
+</head>
+<body>
 
-<script>
-  // --- JavaScriptの保存処理の部分 ---
-  sendBtn.onclick = async () => {
-    const text = chatInput.value.trim();
-    const userName = document.getElementById("nameSelect").value; // 名前を取得
-    
-    if (!text) return;
+  <h1>二人だけの記録空間</h1>
 
-    // 名前と一緒にSupabaseに保存
-    const { error } = await sb
-      .from('messages')
-      .insert([{ 
-        content: text,
-        name: userName // ここで名前を保存
-      }]);
+  <div class="card">
+    <h2>今の気持ち</h2>
+    <select id="nameSelect" style="font-family: inherit; padding: 5px; border-radius: 10px; margin-bottom: 10px;">
+      <option value="まさ">まさ</option>
+      <option value="パートナー">パートナー</option>
+    </select>
+    <textarea id="chatInput" placeholder="ここになんでも書いてね"></textarea>
+    <button id="sendBtn">残しておく</button>
+    <div id="chatLog"></div>
+  </div>
 
-    if (error) {
-      alert("保存に失敗しました");
-    } else {
-      chatInput.value = "";
-      loadMessages(); // 読み込み直す
+  <div class="card">
+    <h2>アルバムと声</h2>
+    <a href="images.html" class="nav-link">・ 写真（Images）を見る</a><br>
+    <a href="audio.html" class="nav-link">・ 声（Audio）を聴く</a>
+  </div>
+
+  <script>
+    const URL = "https://erdwkchgsewnzkyriypx.supabase.co";
+    const KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
+    const sb = window.supabase.createClient(URL, KEY);
+
+    const sendBtn = document.getElementById("sendBtn");
+    const chatInput = document.getElementById("chatInput");
+    const chatLog = document.getElementById("chatLog");
+    const nameSelect = document.getElementById("nameSelect");
+
+    // --- 過去のメッセージを読み込む ---
+    async function loadMessages() {
+      const { data, error } = await sb
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("読み込み失敗:", error);
+        return;
+      }
+
+      chatLog.innerHTML = ""; 
+      data.forEach(msg => {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "msg";
+        msgDiv.innerHTML = `
+          <div class="name-tag">${msg.sender_name || 'だれか'}</div>
+          <div>${msg.text}</div>
+        `;
+        chatLog.appendChild(msgDiv);
+      });
     }
-  };
 
-  // --- 表示する部分も名前に対応させる ---
-  function renderMessage(msg) {
-    const msgDiv = document.createElement("div");
-    msgDiv.className = "msg";
-    
-    // 「名前：メッセージ」という形で表示
-    msgDiv.innerHTML = `
-      <div style="font-size: 0.7rem; color: #8b5cf6; margin-bottom: 3px;">${msg.name || '不明'}</div>
-      <div>${msg.content}</div>
-    `;
-    
-    chatLog.appendChild(msgDiv);
-  }
-</script>
+    // --- メッセージを保存する ---
+    sendBtn.onclick = async () => {
+      const content = chatInput.value.trim();
+      const userName = nameSelect.value;
+      if (!content) return;
+
+      const { error } = await sb
+        .from('messages')
+        .insert([{ text: content, sender_name: userName }]);
+
+      if (error) {
+        alert("保存に失敗しました: " + error.message);
+      } else {
+        chatInput.value = "";
+        loadMessages(); 
+      }
+    };
+
+    loadMessages();
+  </script>
+</body>
+</html>
