@@ -1,100 +1,51 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>二人だけの記録空間</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: "Zen Kurenaido", serif; max-width: 720px; margin: 0 auto; padding: 20px; background: #fdfaf7; color: #444; }
-    h1 { text-align: center; font-weight: normal; margin-bottom: 30px; }
-    .card { background: #fff; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-    .nav-link { display: inline-block; margin-top: 10px; color: #8b5cf6; text-decoration: none; font-size: 1.1rem; }
-    textarea { width: 100%; min-height: 80px; border: 1px solid #eee; border-radius: 10px; padding: 10px; font-family: inherit; box-sizing: border-box; }
-    button { margin-top: 10px; padding: 8px 20px; border-radius: 20px; border: none; background: #a78bfa; color: white; cursor: pointer; font-family: inherit; }
-    #chatLog { margin-top: 15px; }
-    .msg { background: #fef2f2; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #fca5a5; text-align: left; }
-  </style>
-</head>
-<body>
+<div class="card">
+  <h2>今の気持ち</h2>
+  <select id="nameSelect" style="font-family: inherit; padding: 5px; border-radius: 10px; margin-bottom: 10px;">
+    <option value="自分">自分</option>
+    <option value="相手の名前">相手の名前</option>
+  </select>
+  
+  <textarea id="chatInput" placeholder="ここになんでも書いてね"></textarea>
+  <button id="sendBtn">残しておく</button>
+  
+  <div id="chatLog"></div>
+</div>
 
-  <h1>二人だけの記録空間</h1>
+<script>
+  // --- JavaScriptの保存処理の部分 ---
+  sendBtn.onclick = async () => {
+    const text = chatInput.value.trim();
+    const userName = document.getElementById("nameSelect").value; // 名前を取得
+    
+    if (!text) return;
 
-  <div class="card">
-    <h2>思い出を預ける</h2>
-    <input type="file" id="fileInput">
-    <button id="uploadBtn">アップロード</button>
-    <p id="status" style="font-size: 0.8rem; color: #888;"></p>
-  </div>
+    // 名前と一緒にSupabaseに保存
+    const { error } = await sb
+      .from('messages')
+      .insert([{ 
+        content: text,
+        name: userName // ここで名前を保存
+      }]);
 
-  <div class="card">
-    <h2>今の気持ち</h2>
-    <textarea id="chatInput" placeholder="ここになんでも書いてね"></textarea>
-    <button id="sendBtn">残しておく</button>
-    <div id="chatLog"></div>
-  </div>
-
-  <div class="card">
-    <h2>アルバムと声</h2>
-    <a href="images.html" class="nav-link">・ 写真（Images）を見る</a><br>
-    <a href="audio.html" class="nav-link">・ 声（Audio）を聴く</a>
-  </div>
-
-  <script>
-    // --- 接続設定 ---
-    const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
-    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // --- メッセージ送信機能 ---
-    const sendBtn = document.getElementById("sendBtn");
-    const chatInput = document.getElementById("chatInput");
-    const chatLog = document.getElementById("chatLog");
-
-    sendBtn.addEventListener("click", function() {
-      const text = chatInput.value.trim();
-      if (!text) {
-        alert("メッセージを入力してください");
-        return;
-      }
-
-      // 新しいメッセージ要素を作成
-      const msgDiv = document.createElement("div");
-      msgDiv.className = "msg";
-      msgDiv.textContent = text;
-
-      // ログの先頭に追加
-      chatLog.prepend(msgDiv);
-      
-      // 入力欄を空にする
+    if (error) {
+      alert("保存に失敗しました");
+    } else {
       chatInput.value = "";
-      console.log("メッセージを表示しました: " + text);
-    });
+      loadMessages(); // 読み込み直す
+    }
+  };
 
-    // --- アップロード機能 ---
-    const uploadBtn = document.getElementById("uploadBtn");
-    uploadBtn.addEventListener("click", async function() {
-      const fileInput = document.getElementById("fileInput");
-      const statusEl = document.getElementById("status");
-      const file = fileInput.files[0];
-      
-      if (!file) return;
-
-      const bucket = file.type.startsWith("audio/") ? "audio" : "images";
-      statusEl.textContent = "預かり中...";
-
-      try {
-        const fileName = `${Date.now()}_${file.name}`;
-        const { error } = await client.storage.from(bucket).upload(fileName, file);
-        if (error) throw error;
-        statusEl.textContent = "保存しました";
-        fileInput.value = "";
-      } catch (e) {
-        console.error(e);
-        statusEl.textContent = "失敗しました";
-      }
-    });
-  </script>
-</body>
-</html>
+  // --- 表示する部分も名前に対応させる ---
+  function renderMessage(msg) {
+    const msgDiv = document.createElement("div");
+    msgDiv.className = "msg";
+    
+    // 「名前：メッセージ」という形で表示
+    msgDiv.innerHTML = `
+      <div style="font-size: 0.7rem; color: #8b5cf6; margin-bottom: 3px;">${msg.name || '不明'}</div>
+      <div>${msg.content}</div>
+    `;
+    
+    chatLog.appendChild(msgDiv);
+  }
+</script>
