@@ -13,57 +13,88 @@
     .nav-link { display: inline-block; margin-top: 10px; color: #8b5cf6; text-decoration: none; font-size: 1.1rem; }
     textarea { width: 100%; min-height: 80px; border: 1px solid #eee; border-radius: 10px; padding: 10px; font-family: inherit; box-sizing: border-box; }
     button { margin-top: 10px; padding: 8px 20px; border-radius: 20px; border: none; background: #a78bfa; color: white; cursor: pointer; font-family: inherit; }
-    .msg { background: #fef2f2; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #fca5a5; }
+    #chatLog { margin-top: 15px; }
+    .msg { background: #fef2f2; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #fca5a5; text-align: left; }
   </style>
 </head>
 <body>
+
   <h1>二人だけの記録空間</h1>
+
   <div class="card">
     <h2>思い出を預ける</h2>
     <input type="file" id="fileInput">
     <button id="uploadBtn">アップロード</button>
-    <p id="status"></p>
+    <p id="status" style="font-size: 0.8rem; color: #888;"></p>
   </div>
+
   <div class="card">
     <h2>今の気持ち</h2>
     <textarea id="chatInput" placeholder="ここになんでも書いてね"></textarea>
     <button id="sendBtn">残しておく</button>
     <div id="chatLog"></div>
   </div>
+
   <div class="card">
     <h2>アルバムと声</h2>
     <a href="images.html" class="nav-link">・ 写真（Images）を見る</a><br>
     <a href="audio.html" class="nav-link">・ 声（Audio）を聴く</a>
   </div>
-  <script>
-    const URL = "https://erdwkchgsewnzkyriypx.supabase.co";
-    const KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
-    const sb = window.supabase.createClient(URL, KEY);
 
+  <script>
+    // --- 接続設定 ---
+    const SUPABASE_URL = "https://erdwkchgsewnzkyriypx.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_p7r9MOIEw4RT7ptaJ8_Arg_nbli69_J";
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // --- メッセージ送信機能 ---
     const sendBtn = document.getElementById("sendBtn");
     const chatInput = document.getElementById("chatInput");
     const chatLog = document.getElementById("chatLog");
 
-    // メッセージ表示機能
-    sendBtn.onclick = () => {
+    sendBtn.addEventListener("click", function() {
       const text = chatInput.value.trim();
-      if (!text) return;
+      if (!text) {
+        alert("メッセージを入力してください");
+        return;
+      }
+
+      // 新しいメッセージ要素を作成
       const msgDiv = document.createElement("div");
       msgDiv.className = "msg";
       msgDiv.textContent = text;
-      chatLog.prepend(msgDiv);
-      chatInput.value = "";
-    };
 
-    // アップロード機能
-    document.getElementById("uploadBtn").onclick = async () => {
-      const file = document.getElementById("fileInput").files[0];
+      // ログの先頭に追加
+      chatLog.prepend(msgDiv);
+      
+      // 入力欄を空にする
+      chatInput.value = "";
+      console.log("メッセージを表示しました: " + text);
+    });
+
+    // --- アップロード機能 ---
+    const uploadBtn = document.getElementById("uploadBtn");
+    uploadBtn.addEventListener("click", async function() {
+      const fileInput = document.getElementById("fileInput");
+      const statusEl = document.getElementById("status");
+      const file = fileInput.files[0];
+      
       if (!file) return;
+
       const bucket = file.type.startsWith("audio/") ? "audio" : "images";
-      const fileName = `${Date.now()}_${file.name}`;
-      const { error } = await sb.storage.from(bucket).upload(fileName, file);
-      document.getElementById("status").textContent = error ? "失敗しました" : "保存しました";
-    };
+      statusEl.textContent = "預かり中...";
+
+      try {
+        const fileName = `${Date.now()}_${file.name}`;
+        const { error } = await client.storage.from(bucket).upload(fileName, file);
+        if (error) throw error;
+        statusEl.textContent = "保存しました";
+        fileInput.value = "";
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = "失敗しました";
+      }
+    });
   </script>
 </body>
 </html>
