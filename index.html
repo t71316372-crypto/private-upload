@@ -11,18 +11,7 @@
     h1 { text-align: center; font-weight: normal; margin-bottom: 30px; }
     .card { background: #fff; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
     .nav-link { display: inline-block; margin-top: 10px; color: #8b5cf6; text-decoration: none; font-size: 1.1rem; }
-    
-    /* セレクトボックスのデザイン */
-    select { 
-      width: 100%; 
-      padding: 10px; 
-      border-radius: 10px; 
-      border: 1px solid #eee; 
-      font-family: inherit; 
-      margin-bottom: 10px;
-      background-color: #f9f9f9;
-    }
-    
+    select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #eee; font-family: inherit; margin-bottom: 10px; background-color: #f9f9f9; }
     textarea { width: 100%; min-height: 80px; border: 1px solid #eee; border-radius: 10px; padding: 10px; font-family: inherit; box-sizing: border-box; }
     button { margin-top: 10px; padding: 8px 20px; border-radius: 20px; border: none; background: #a78bfa; color: white; cursor: pointer; font-family: inherit; }
     #chatLog { margin-top: 15px; }
@@ -31,9 +20,7 @@
   </style>
 </head>
 <body>
-
   <h1>二人だけの記録空間</h1>
-
   <div class="card">
     <h2>今の気持ち</h2>
     <select id="nameSelect">
@@ -44,83 +31,45 @@
     <button id="sendBtn">残しておく</button>
     <div id="chatLog"></div>
   </div>
-
   <div class="card">
     <h2>アルバムと声</h2>
-    <a href="images.html" class="nav-link">・ 写真（Images）を見る</a><br>
-    <a href="audio.html" class="nav-link">・ 声（Audio）を聴く</a>
+    <a href="images.html" class="nav-link">・ 写真を見る</a><br>
+    <a href="audio.html" class="nav-link">・ 声を聴く</a>
   </div>
-
   <script>
-// ↓ 前後の空白（スペース）を絶対に入れないように貼り付けてください
-const URL = "https://erdwkchgsewnzkyriypx.supabase.co";
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";
-const sb = window.supabase.createClient(URL, KEY);
+    const URL = "https://erdwkchgsewnzkyriypx.supabase.co";
+    const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";
+    const sb = window.supabase.createClient(URL, KEY);
+    const sendBtn = document.getElementById("sendBtn");
+    const chatInput = document.getElementById("chatInput");
+    const chatLog = document.getElementById("chatLog");
+    const nameSelect = document.getElementById("nameSelect");
 
-  const sendBtn = document.getElementById("sendBtn");
-  const chatInput = document.getElementById("chatInput");
-  const chatLog = document.getElementById("chatLog");
-  const nameSelect = document.getElementById("nameSelect");
-
-  // --- 読み込み機能 ---
-  async function loadMessages() {
-    const { data, error } = await sb
-      .from('messages')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error("読み込みエラー:", error);
-      return;
+    async function loadMessages() {
+      const { data, error } = await sb.from('messages').select('*').order('created_at', { ascending: false });
+      if (error) return;
+      chatLog.innerHTML = ""; 
+      data.forEach(msg => {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "msg";
+        msgDiv.innerHTML = `<div class="name-tag">${msg.sender_name || '不明'}</div><div>${msg.text}</div>`;
+        chatLog.appendChild(msgDiv);
+      });
     }
 
-    chatLog.innerHTML = ""; 
-    data.forEach(msg => {
-      const msgDiv = document.createElement("div");
-      msgDiv.className = "msg";
-      // sender_name と text を表示するように修正
-      msgDiv.innerHTML = `
-        <div class="name-tag">${msg.sender_name || '不明'}</div>
-        <div>${msg.text}</div>
-      `;
-      chatLog.appendChild(msgDiv);
-    });
-  }
-
-  // --- 送信機能 ---
-  sendBtn.onclick = async () => {
-    const content = chatInput.value.trim();
-    const userName = nameSelect.value;
-    
-    if (!content) {
-      alert("メッセージを入力してください");
-      return;
-    }
-
-    // テーブルの列名「text」と「sender_name」に確実に合わせる
-    const { error } = await sb
-      .from('messages')
-      .insert([
-        { 
-          text: content, 
-          sender_name: userName 
-        }
-      ]);
-
-    if (error) {
-      console.error("送信エラー詳細:", error);
-      alert("送信に失敗しました。詳細はコンソールを確認してください。");
-    } else {
-      chatInput.value = ""; // 入力欄をクリア
-      await loadMessages(); // リロードせずに最新ログを表示
-    }
-  };
-
-  // 最初に読み込む
-  loadMessages();
+    sendBtn.onclick = async () => {
+      const content = chatInput.value.trim();
+      const userName = nameSelect.value;
+      if (!content) return;
+      const { error } = await sb.from('messages').insert([{ text: content, sender_name: userName }]);
+      if (error) {
+        alert("送信失敗: " + error.message);
+      } else {
+        chatInput.value = "";
+        loadMessages(); 
+      }
+    };
+    loadMessages();
   </script>
 </body>
 </html>
-
-
-
