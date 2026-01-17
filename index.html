@@ -52,59 +52,73 @@
   </div>
 
   <script>
-    const URL = "https://erdwkchgsewnzkyriypx.supabase.co";
-    const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";
-    const sb = window.supabase.createClient(URL, KEY);
+  const URL = "https://erdwkchgsewnzkyriypx.supabase.co";
+  const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";
+  const sb = window.supabase.createClient(URL, KEY);
 
-    const sendBtn = document.getElementById("sendBtn");
-    const chatInput = document.getElementById("chatInput");
-    const chatLog = document.getElementById("chatLog");
-    const nameSelect = document.getElementById("nameSelect");
+  const sendBtn = document.getElementById("sendBtn");
+  const chatInput = document.getElementById("chatInput");
+  const chatLog = document.getElementById("chatLog");
+  const nameSelect = document.getElementById("nameSelect");
 
-    // --- メッセージ読み込み ---
-    async function loadMessages() {
-      const { data, error } = await sb
-        .from('messages')
-        .select('*')
-        .order('created_at', { ascending: false });
+  // --- 読み込み機能 ---
+  async function loadMessages() {
+    const { data, error } = await sb
+      .from('messages')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("読み込み失敗:", error);
-        return;
-      }
-
-      chatLog.innerHTML = ""; 
-      data.forEach(msg => {
-        const msgDiv = document.createElement("div");
-        msgDiv.className = "msg";
-        msgDiv.innerHTML = `
-          <div class="name-tag">${msg.sender_name || 'だれか'}</div>
-          <div>${msg.text}</div>
-        `;
-        chatLog.appendChild(msgDiv);
-      });
+    if (error) {
+      console.error("読み込みエラー:", error);
+      return;
     }
 
-    // --- メッセージ保存 ---
-    sendBtn.onclick = async () => {
-      const content = chatInput.value.trim();
-      const userName = nameSelect.value;
-      if (!content) return;
+    chatLog.innerHTML = ""; 
+    data.forEach(msg => {
+      const msgDiv = document.createElement("div");
+      msgDiv.className = "msg";
+      // sender_name と text を表示するように修正
+      msgDiv.innerHTML = `
+        <div class="name-tag">${msg.sender_name || '不明'}</div>
+        <div>${msg.text}</div>
+      `;
+      chatLog.appendChild(msgDiv);
+    });
+  }
 
-      const { error } = await sb
-        .from('messages')
-        .insert([{ text: content, sender_name: userName }]);
+  // --- 送信機能 ---
+  sendBtn.onclick = async () => {
+    const content = chatInput.value.trim();
+    const userName = nameSelect.value;
+    
+    if (!content) {
+      alert("メッセージを入力してください");
+      return;
+    }
 
-      if (error) {
-        alert("保存に失敗しました。RLSポリシーを確認してください。");
-      } else {
-        chatInput.value = "";
-        loadMessages(); 
-      }
-    };
+    // テーブルの列名「text」と「sender_name」に確実に合わせる
+    const { error } = await sb
+      .from('messages')
+      .insert([
+        { 
+          text: content, 
+          sender_name: userName 
+        }
+      ]);
 
-    loadMessages();
+    if (error) {
+      console.error("送信エラー詳細:", error);
+      alert("送信に失敗しました。詳細はコンソールを確認してください。");
+    } else {
+      chatInput.value = ""; // 入力欄をクリア
+      await loadMessages(); // リロードせずに最新ログを表示
+    }
+  };
+
+  // 最初に読み込む
+  loadMessages();
   </script>
 </body>
 </html>
+
 
