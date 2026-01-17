@@ -48,14 +48,18 @@ async function loadMessages() {
 try {
 const { data, error } = await sb.from('messages').select('*').order('created_at', { ascending: false });
 if (error) throw error;
-chatLog.innerHTML = ""; 
+chatLog.innerHTML = "";
+if (data) {
 data.forEach(msg => {
 const msgDiv = document.createElement("div");
 msgDiv.className = "msg";
 msgDiv.innerHTML = `<div class="name-tag">${msg.sender_name || '不明'}</div><div>${msg.text}</div>`;
 chatLog.appendChild(msgDiv);
 });
-} catch (e) { console.error(e); }
+}
+} catch (e) {
+console.error("読み込みエラー:", e);
+}
 }
 sendBtn.onclick = async () => {
 const content = chatInput.value.trim();
@@ -66,7 +70,7 @@ if (error) {
 alert("送信失敗: " + error.message);
 } else {
 chatInput.value = "";
-loadMessages(); 
+loadMessages();
 }
 };
 loadMessages();
