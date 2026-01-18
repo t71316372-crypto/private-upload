@@ -5,49 +5,72 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>二人だけの記録空間</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap" rel="stylesheet">
+<style>
+body { font-family: "Zen Kurenaido", serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #fdfaf7; color: #444; }
+h1 { text-align: center; font-weight: normal; margin-bottom: 30px; }
+.card { background: #fff; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+select, textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 10px; box-sizing: border-box; font-family: inherit; }
+textarea { min-height: 80px; }
+button { width: 100%; padding: 12px; border-radius: 20px; border: none; background: #a78bfa; color: white; cursor: pointer; font-family: inherit; font-size: 1.1rem; }
+.msg { background: #fef2f2; padding: 12px; border-radius: 12px; margin-bottom: 12px; border-left: 5px solid #fca5a5; position: relative; }
+.name-tag { font-size: 0.8rem; color: #8b5cf6; font-weight: bold; margin-bottom: 5px; }
+.nav-link { display: inline-block; margin-top: 10px; color: #8b5cf6; text-decoration: none; }
+</style>
 </head>
 <body>
-<div style="padding:20px; font-family:sans-serif;">
-  <h1>二人だけの記録空間</h1>
-  <p>状態: <span id="status">接続中...</span></p>
-  <textarea id="txt" placeholder="メッセージ"></textarea><br>
-  <button id="btn" style="padding:10px 20px;">送信</button>
-  <div id="log" style="margin-top:20px;"></div>
+<h1>二人だけの記録空間</h1>
+<div class="card">
+<select id="nameSelect"><option value="まさ">まさ</option><option value="パートナー">パートナー</option></select>
+<textarea id="chatInput" placeholder="メッセージを入力"></textarea>
+<button id="sendBtn">残しておく</button>
+<div id="chatLog" style="margin-top:25px;"></div>
+</div>
+<div class="card" style="text-align:center;">
+<a href="../images.html" class="nav-link">・ 写真を見る</a><br>
+<a href="../audio.html" class="nav-link">・ 声を聴く</a>
 </div>
 
 <script>
 (function() {
-  // 文字化けを絶対に防ぐために、あえてURLを細かく分割して合体させます
   const p = "https://";
   const d = "erdwkchgsewnzkyriypx";
   const s = ".supabase.co";
   const finalUrl = p + d + s;
-  
   const finalKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";
 
-  try {
-    const sb = window.supabase.createClient(finalUrl, finalKey);
-    document.getElementById('status').innerText = "接続成功！";
+  const sb = window.supabase.createClient(finalUrl, finalKey);
 
-    async function load() {
-      const { data, error } = await sb.from('messages').select('*').order('created_at', { ascending: false });
-      if (data) {
-        document.getElementById('log').innerHTML = data.map(m => `<div>${m.text}</div>`).join('<hr>');
-      }
+  async function load() {
+    const { data, error } = await sb.from('messages').select('*').order('created_at', { ascending: false });
+    if (data) {
+      document.getElementById('chatLog').innerHTML = data.map(m => `
+        <div class="msg">
+          <div class="name-tag">${m.sender_name || 'だれか'}</div>
+          <div>${m.text}</div>
+        </div>
+      `).join("");
     }
-
-    document.getElementById('btn').onclick = async () => {
-      const val = document.getElementById('txt').value;
-      if (!val) return;
-      await sb.from('messages').insert([{ text: val, sender_name: 'まさ' }]);
-      document.getElementById('txt').value = "";
-      load();
-    };
-    load();
-  } catch (e) {
-    document.getElementById('status').innerText = "エラー: " + e.message;
-    console.error(e);
   }
+
+  document.getElementById('sendBtn').onclick = async () => {
+    const btn = document.getElementById('sendBtn');
+    const txt = document.getElementById('chatInput');
+    const name = document.getElementById('nameSelect').value;
+    if (!txt.value.trim()) return;
+
+    btn.disabled = true;
+    const { error } = await sb.from('messages').insert([{ text: txt.value, sender_name: name }]);
+    btn.disabled = false;
+
+    if (!error) {
+      txt.value = "";
+      load();
+    } else {
+      alert("エラーが発生しました: " + error.message);
+    }
+  };
+  load();
 })();
 </script>
 </body>
