@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>二人だけの記録空間</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div style="padding:20px; font-family:sans-serif;">
+  <h1>二人だけの記録空間</h1>
+  <p>状態: <span id="status">接続中...</span></p>
+  <textarea id="txt" placeholder="メッセージ"></textarea><br>
+  <button id="btn" style="padding:10px 20px;">送信</button>
+  <div id="log" style="margin-top:20px;"></div>
+</div>
+
+<script>
+(function() {
+  // 文字化けを絶対に防ぐために、あえてURLを細かく分割して合体させます
+  const p = "https://";
+  const d = "erdwkchgsewnzkyriypx";
+  const s = ".supabase.co";
+  const finalUrl = p + d + s;
+  
+  const finalKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";
+
+  try {
+    const sb = window.supabase.createClient(finalUrl, finalKey);
+    document.getElementById('status').innerText = "接続成功！";
+
+    async function load() {
+      const { data, error } = await sb.from('messages').select('*').order('created_at', { ascending: false });
+      if (data) {
+        document.getElementById('log').innerHTML = data.map(m => `<div>${m.text}</div>`).join('<hr>');
+      }
+    }
+
+    document.getElementById('btn').onclick = async () => {
+      const val = document.getElementById('txt').value;
+      if (!val) return;
+      await sb.from('messages').insert([{ text: val, sender_name: 'まさ' }]);
+      document.getElementById('txt').value = "";
+      load();
+    };
+    load();
+  } catch (e) {
+    document.getElementById('status').innerText = "エラー: " + e.message;
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
