@@ -8,13 +8,30 @@
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap" rel="stylesheet">
 <style>
 body { font-family: "Zen Kurenaido", serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #fdfaf7; color: #444; }
-h1 { text-align: center; font-weight: normal; margin-bottom: 30px; }
+h1 { text-align: center; font-weight: normal; margin-bottom: 20px; }
 .card { background: #fff; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
 select, textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 10px; box-sizing: border-box; font-family: inherit; }
-textarea { min-height: 80px; }
-button { width: 100%; padding: 12px; border-radius: 20px; border: none; background: #a78bfa; color: white; cursor: pointer; font-family: inherit; font-size: 1.1rem; }
-.msg { background: #fef2f2; padding: 12px; border-radius: 12px; margin-bottom: 12px; border-left: 5px solid #fca5a5; position: relative; }
+button#sendBtn { width: 100%; padding: 12px; border-radius: 20px; border: none; background: #a78bfa; color: white; cursor: pointer; font-family: inherit; font-size: 1.1rem; }
+
+#chatLog { 
+  margin-top: 25px; 
+  max-height: 550px; 
+  overflow-y: auto;  
+  padding-right: 5px;
+}
+
+.msg { background: #fef2f2; padding: 12px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #fca5a5; }
 .name-tag { font-size: 0.8rem; color: #8b5cf6; font-weight: bold; margin-bottom: 5px; }
+.msg-text { margin-bottom: 12px; word-break: break-all; font-size: 1.05rem; }
+
+/* リアクションボタンの並び */
+.reaction-container { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.reaction-btn {
+  background: #fff; border: 1px solid #eee; border-radius: 12px;
+  padding: 4px 8px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 3px;
+}
+.reaction-btn:active { transform: scale(0.9); }
 .nav-link { display: inline-block; margin-top: 10px; color: #8b5cf6; text-decoration: none; }
 </style>
 </head>
@@ -24,51 +41,72 @@ button { width: 100%; padding: 12px; border-radius: 20px; border: none; backgrou
 <select id="nameSelect"><option value="まさ">まさ</option><option value="パートナー">パートナー</option></select>
 <textarea id="chatInput" placeholder="メッセージを入力"></textarea>
 <button id="sendBtn">残しておく</button>
-<div id="chatLog" style="margin-top:25px;"></div>
+<div id="chatLog"></div>
 </div>
+
 <div class="card" style="text-align:center;">
-<a href="../images.html" class="nav-link">・ 写真を見る</a><br>
-<a href="../audio.html" class="nav-link">・ 声を聴く</a>
+<a href="images.html" class="nav-link">・ 写真を見る</a><br>
+<a href="audio.html" class="nav-link">・ 声を聴く</a>
 </div>
 
 <script>
 (function() {
-  const p = "https://";
-  const d = "erdwkchgsewnzkyriypx";
-  const s = ".supabase.co";
+  const p = "https://", d = "erdwkchgsewnzkyriypx", s = ".supabase.co";
   const finalUrl = p + d + s;
   const finalKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";
-
   const sb = window.supabase.createClient(finalUrl, finalKey);
+
+  // 5種類のリアクション設定
+  const stamps = [
+    { key: 'good', icon: '👍' },
+    { key: 'smile', icon: '😊' },
+    { key: 'worried', icon: '😟' },
+    { key: 'cry', icon: '😭' },
+    { key: 'sparkle', icon: '✨' }
+  ];
 
   async function load() {
     const { data, error } = await sb.from('messages').select('*').order('created_at', { ascending: false });
     if (data) {
-      document.getElementById('chatLog').innerHTML = data.map(m => `
-        <div class="msg">
-          <div class="name-tag">${m.sender_name || 'だれか'}</div>
-          <div>${m.text}</div>
-        </div>
-      `).join("");
+      document.getElementById('chatLog').innerHTML = data.map(m => {
+        // 各リアクションの数を取得（データがない場合は0）
+        const counts = m.reactions || {}; 
+        
+        const reactionHtml = stamps.map(s => `
+          <button class="reaction-btn" onclick="addReaction(${m.id}, '${s.key}', ${counts[s.key] || 0})">
+            ${s.icon} <span>${counts[s.key] || 0}</span>
+          </button>
+        `).join("");
+
+        return `
+          <div class="msg">
+            <div class="name-tag">${m.sender_name || 'だれか'}</div>
+            <div class="msg-text">${m.text}</div>
+            <div class="reaction-container">${reactionHtml}</div>
+          </div>
+        `;
+      }).join("");
     }
   }
 
+  // リアクション更新機能
+  window.addReaction = async (id, type, currentCount) => {
+    // 現在のリアクションデータを取得して更新
+    const { data } = await sb.from('messages').select('reactions').eq('id', id).single();
+    const newReactions = data.reactions || {};
+    newReactions[type] = (newReactions[type] || 0) + 1;
+
+    const { error } = await sb.from('messages').update({ reactions: newReactions }).eq('id', id);
+    if (!error) load();
+  };
+
   document.getElementById('sendBtn').onclick = async () => {
-    const btn = document.getElementById('sendBtn');
     const txt = document.getElementById('chatInput');
     const name = document.getElementById('nameSelect').value;
     if (!txt.value.trim()) return;
-
-    btn.disabled = true;
-    const { error } = await sb.from('messages').insert([{ text: txt.value, sender_name: name }]);
-    btn.disabled = false;
-
-    if (!error) {
-      txt.value = "";
-      load();
-    } else {
-      alert("エラーが発生しました: " + error.message);
-    }
+    // 初期状態は空のオブジェクト {}
+    const { error } = await sb.from('messages').insert([{ text: txt.value, sender_name: name, reactions: {} }]);
+    if (!error) { txt.value = ""; load(); }
   };
   load();
 })();
