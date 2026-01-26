@@ -3,113 +3,123 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+
 <title>Just the two of us  二人の場所</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap" rel="stylesheet">
 <style>
-body { font-family: "Zen Kurenaido", serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #fdfaf7; color: #444; }
-h1 { text-align: center; font-weight: normal; margin-bottom: 20px; }
-.card { background: #fff; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-select, textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 10px; box-sizing: border-box; font-family: inherit; }
-button#sendBtn { width: 100%; padding: 12px; border-radius: 20px; border: none; background: #a78bfa; color: white; cursor: pointer; font-family: inherit; font-size: 1.1rem; }
+  /* 最初はコンテンツを隠しておきます */
+  #mainContent { display: none; }
+  
+  body { font-family: "Zen Kurenaido", serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #fdfaf7; color: #444; }
+  h1 { text-align: center; font-weight: normal; margin-bottom: 20px; }
+  .card { background: #fff; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+  select, textarea, input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 10px; box-sizing: border-box; font-family: inherit; }
+  button { width: 100%; padding: 12px; border-radius: 20px; border: none; background: #a78bfa; color: white; cursor: pointer; font-family: inherit; font-size: 1.1rem; }
 
-#chatLog { 
-  margin-top: 25px; 
-  max-height: 550px; 
-  overflow-y: auto;  
-  padding-right: 5px;
-}
-
-.msg { background: #fef2f2; padding: 12px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #fca5a5; }
-.name-tag { font-size: 0.8rem; color: #8b5cf6; font-weight: bold; margin-bottom: 5px; }
-.msg-text { margin-bottom: 12px; word-break: break-all; font-size: 1.05rem; }
-
-/* リアクションボタンの並び */
-.reaction-container { display: flex; flex-wrap: wrap; gap: 6px; }
-
-.reaction-btn {
-  background: #fff; border: 1px solid #eee; border-radius: 12px;
-  padding: 4px 8px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 3px;
-}
-.reaction-btn:active { transform: scale(0.9); }
-.nav-link { display: inline-block; margin-top: 10px; color: #8b5cf6; text-decoration: none; }
+  #chatLog { margin-top: 25px; max-height: 550px; overflow-y: auto; padding-right: 5px; }
+  .msg { background: #fef2f2; padding: 12px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #fca5a5; }
+  .name-tag { font-size: 0.8rem; color: #8b5cf6; font-weight: bold; margin-bottom: 5px; }
+  .msg-text { margin-bottom: 12px; word-break: break-all; font-size: 1.05rem; }
+  .reaction-container { display: flex; flex-wrap: wrap; gap: 6px; }
+  .reaction-btn { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 4px 8px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 3px; }
+  .nav-link { display: inline-block; margin-top: 10px; color: #8b5cf6; text-decoration: none; }
 </style>
 </head>
 <body>
-<h1>Just the two of us  二人の場所</h1>
-<div class="card">
-<select id="nameSelect"><option value="まさ">まさ</option><option value="パートナー">まい</option></select>
-<textarea id="chatInput" placeholder="メッセージを入力"></textarea>
-<button id="sendBtn">話しかける</button>
-<div id="chatLog"></div>
+
+<div id="lockScreen" class="card" style="margin-top: 50px; text-align: center;">
+  <h2>🔒 二人の場所</h2>
+  <p>合言葉を入れてね</p>
+  <input type="password" id="passInput" placeholder="パスワード">
+  <button onclick="checkPass()">入室する</button>
 </div>
 
-<div class="card" style="text-align:center;">
-<a href="images.html" class="nav-link">・ 写真を見る</a><br>
-<a href="audio.html" class="nav-link">・ 声を聴く</a>
+<div id="mainContent">
+  <h1>Just the two of us  二人の場所</h1>
+  <div class="card">
+    <select id="nameSelect"><option value="まさ">まさ</option><option value="まい">まい</option></select>
+    <textarea id="chatInput" placeholder="メッセージを入力"></textarea>
+    <button id="sendBtn">話しかける</button>
+    <div id="chatLog"></div>
+  </div>
+
+  <div class="card" style="text-align:center;">
+    <a href="images.html" class="nav-link">・ 写真を見る</a><br>
+    <a href="audio.html" class="nav-link">・ 声を聴く</a>
+  </div>
 </div>
 
 <script>
-(function() {
-  const p = "https://", d = "erdwkchgsewnzkyriypx", s = ".supabase.co";
-  const finalUrl = p + d + s;
-  const finalKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";
-  const sb = window.supabase.createClient(finalUrl, finalKey);
+  // ★ここに好きなパスワードを設定してください
+  const PASSWORD = "二人の合言葉";
 
-  // 5種類のリアクション設定
-  const stamps = [
-    { key: 'good', icon: '👍' },
-    { key: 'smile', icon: '😊' },
-    { key: 'worried', icon: '😟' },
-    { key: 'cry', icon: '😭' },
-    { key: 'sparkle', icon: '✨' }
-  ];
-
-  async function load() {
-    const { data, error } = await sb.from('messages').select('*').order('created_at', { ascending: false });
-    if (data) {
-      document.getElementById('chatLog').innerHTML = data.map(m => {
-        // 各リアクションの数を取得（データがない場合は0）
-        const counts = m.reactions || {}; 
-        
-        const reactionHtml = stamps.map(s => `
-          <button class="reaction-btn" onclick="addReaction(${m.id}, '${s.key}', ${counts[s.key] || 0})">
-            ${s.icon} <span>${counts[s.key] || 0}</span>
-          </button>
-        `).join("");
-
-        return `
-          <div class="msg">
-            <div class="name-tag">${m.sender_name || 'だれか'}</div>
-            <div class="msg-text">${m.text}</div>
-            <div class="reaction-container">${reactionHtml}</div>
-          </div>
-        `;
-      }).join("");
+  function checkPass() {
+    const input = document.getElementById('passInput').value;
+    if (input === PASSWORD) {
+      document.getElementById('lockScreen').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      initApp(); // 認証成功後にアプリを起動
+    } else {
+      alert("合言葉が違うみたい…");
     }
   }
 
-  // リアクション更新機能
-  window.addReaction = async (id, type, currentCount) => {
-    // 現在のリアクションデータを取得して更新
-    const { data } = await sb.from('messages').select('reactions').eq('id', id).single();
-    const newReactions = data.reactions || {};
-    newReactions[type] = (newReactions[type] || 0) + 1;
+  // エンターキーでも入室できるようにする
+  document.getElementById('passInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') checkPass();
+  });
 
-    const { error } = await sb.from('messages').update({ reactions: newReactions }).eq('id', id);
-    if (!error) load();
-  };
+  function initApp() {
+    const p = "https://", d = "erdwkchgsewnzkyriypx", s = ".supabase.co";
+    const finalUrl = p + d + s;
+    const finalKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZHdrY2hnc2V3bnpreXJpeXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5Nzc0MTEsImV4cCI6MjA3OTU1MzQxMX0.YU29PyeeZbW-Hj1Q3FZUSWc2RpfodUEk0DXb9kKj1W8";
+    const sb = window.supabase.createClient(finalUrl, finalKey);
 
-  document.getElementById('sendBtn').onclick = async () => {
-    const txt = document.getElementById('chatInput');
-    const name = document.getElementById('nameSelect').value;
-    if (!txt.value.trim()) return;
-    // 初期状態は空のオブジェクト {}
-    const { error } = await sb.from('messages').insert([{ text: txt.value, sender_name: name, reactions: {} }]);
-    if (!error) { txt.value = ""; load(); }
-  };
-  load();
-})();
+    const stamps = [
+      { key: 'good', icon: '👍' }, { key: 'smile', icon: '😊' },
+      { key: 'worried', icon: '😟' }, { key: 'cry', icon: '😭' }, { key: 'sparkle', icon: '✨' }
+    ];
+
+    async function load() {
+      const { data, error } = await sb.from('messages').select('*').order('created_at', { ascending: false });
+      if (data) {
+        document.getElementById('chatLog').innerHTML = data.map(m => {
+          const counts = m.reactions || {};
+          const reactionHtml = stamps.map(s => `
+            <button class="reaction-btn" onclick="addReaction(${m.id}, '${s.key}', ${counts[s.key] || 0})">
+              ${s.icon} <span>${counts[s.key] || 0}</span>
+            </button>
+          `).join("");
+          return `
+            <div class="msg">
+              <div class="name-tag">${m.sender_name || 'だれか'}</div>
+              <div class="msg-text">${m.text}</div>
+              <div class="reaction-container">${reactionHtml}</div>
+            </div>
+          `;
+        }).join("");
+      }
+    }
+
+    window.addReaction = async (id, type, currentCount) => {
+      const { data } = await sb.from('messages').select('reactions').eq('id', id).single();
+      const newReactions = data.reactions || {};
+      newReactions[type] = (newReactions[type] || 0) + 1;
+      const { error } = await sb.from('messages').update({ reactions: newReactions }).eq('id', id);
+      if (!error) load();
+    };
+
+    document.getElementById('sendBtn').onclick = async () => {
+      const txt = document.getElementById('chatInput');
+      const name = document.getElementById('nameSelect').value;
+      if (!txt.value.trim()) return;
+      const { error } = await sb.from('messages').insert([{ text: txt.value, sender_name: name, reactions: {} }]);
+      if (!error) { txt.value = ""; load(); }
+    };
+    load();
+  }
 </script>
 </body>
 </html>
