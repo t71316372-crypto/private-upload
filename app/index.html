@@ -110,12 +110,25 @@
       load();
     };
 
-    window.sendMsg = async () => {
-      const txt = document.getElementById('chatInput');
-      if (!txt.value.trim()) return;
-      await sb.from('messages').insert([{ text: txt.value, sender_name: document.getElementById('nameSelect').value, reactions: {} }]);
-      txt.value = ""; load();
-    };
+  window.sendMsg = async () => {
+  const txt = document.getElementById('chatInput');
+  if (!txt.value.trim()) return;
+
+  const { error } = await sb.from('messages').insert([{
+    text: txt.value,
+    sender_name: document.getElementById('nameSelect').value,
+    reactions: {}
+  }]);
+
+  if (error) {
+    alert("エラー: " + error.message);
+    console.error(error);
+    return;
+  }
+
+  txt.value = "";
+  load();
+};
     load();
   }
 </script>
