@@ -47,13 +47,13 @@
 <body>
 
 <div id="lockScreen" class="card" style="margin-top: 50px; text-align: center;">
-  <h2>🔒 二人の場所</h2>
+  <h2>🔒 Just the two of us</h2>
   <input type="password" id="passInput" placeholder="合言葉">
   <button onclick="checkPass()">入室する</button>
 </div>
 
 <div id="mainContent">
-  <h1>Just the two of us<br>二人の場所</h1>
+  <h1>Just the two of us<br>トークルーム</h1>
   <div class="card">
     <select id="nameSelect"><option value="まさ">まさ</option><option value="まい">まい</option></select>
     <textarea id="chatInput" placeholder="メッセージを入力"></textarea>
@@ -80,7 +80,7 @@
   function initApp() {
     const p = "https://", d = "vawogrqmymsqhkwlywuf", s = ".supabase.co";
     const sb = window.supabase.createClient(p+d+s, "sb_publishable_HC3LYlPQpF6dpz7t56A8QQ_6sEDJ20l");
-    const stamps ={k:'smile',i:'😊'},{k:'worried',i:'😟'},{k:'cry',i:'😭'},{k:'sparkle',i:'✨'}];
+    const stamps = {k:'smile',i:'😊'},{k:'worried',i:'😟'},{k:'cry',i:'😭'},{k:'sparkle',i:'✨'}];
 
     async function load() {
       const { data } = await sb.from('messages').select('*').order('created_at', { ascending: false });
