@@ -22,37 +22,42 @@
     // 接続クライアントの作成
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    async function displayImages() {
-      const gallery = document.getElementById("gallery");
-      console.log("Fetching images from:", SUPABASE_URL);
+   async function displayImages() {
+  const gallery = document.getElementById("gallery");
 
-      // 1. imagesバケットからファイル一覧を取得
-      const { data, error } = await client.storage.from("imeges").list();
+  const { data, error } = await client.storage
+    .from("imeges")
+    .list("", {
+      limit: 100,
+      offset: 0,
+      sortBy: { column: "name", order: "asc" }
+    });
 
-      if (error) {
-        console.error("List error:", error);
-        gallery.innerHTML = "エラーが発生しました: " + error.message;
-        return;
-      }
+  if (error) {
+    gallery.innerHTML = "エラー: " + error.message;
+    return;
+  }
 
-      if (!data || data.length === 0) {
-        gallery.innerHTML = "画像が見つかりません。バケットが空か、ポリシーの設定が必要です。";
-        return;
-      }
+  if (!data || data.length === 0) {
+    gallery.innerHTML = "画像が見つかりません。";
+    return;
+  }
 
-      gallery.innerHTML = ""; // 読み込み中表示を消す
+  gallery.innerHTML = "";
 
-      // 2. ループして画像を表示
-      data.forEach(file => {
-        if (file.name === ".emptyKeep") return;
+  data.forEach(file => {
+    const { data: urlData } = client.storage
+      .from("imeges")
+      .getPublicUrl(file.name);
 
-        const { data: urlData } = client.storage.from("images").getPublicUrl(file.name);
-        
-        const img = document.createElement("img");
-        img.src = urlData.publicUrl;
-        gallery.appendChild(img);
-      });
-    }
+    const img = document.createElement("img");
+    img.src = urlData.publicUrl;
+    img.style.width = "100%";
+    img.style.marginBottom = "10px";
+
+    gallery.appendChild(img);
+  });
+}
 
     displayImages();
   </script>
