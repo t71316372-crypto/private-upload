@@ -125,6 +125,15 @@
   load();
 };
     load();
+    sb.channel('messages')
+  .on(
+    'postgres_changes',
+    { event: '*', schema: 'public', table: 'messages' },
+    () => {
+      load();
+    }
+  )
+  .subscribe();
   }
 </script>
 </body>
