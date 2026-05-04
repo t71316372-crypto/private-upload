@@ -27,7 +27,7 @@
       console.log("Fetching images from:", SUPABASE_URL);
 
       // 1. imagesバケットからファイル一覧を取得
-      const { data, error } = await client.storage.from("images").list();
+      const { data, error } = await client.storage.from("imeges").list();
 
       if (error) {
         console.error("List error:", error);
