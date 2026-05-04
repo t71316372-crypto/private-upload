@@ -97,14 +97,14 @@
       }
     }
 
-    window.addReaction = async (id, type, current) => {
-      const { data } = await sb.from('messages').select('reactions').eq('id', id).single();
-      const newR = data.reactions || {};
-      newR[type] = (newR[type] || 0) + 1;
-      await sb.from('messages').update({ reactions: newR }).eq('id', id);
-      load();
-    };
+  window.addReaction = async (id, type) => {
+  const { data } = await sb
+    .from('messages')
+    .select('reactions')
+    .eq('id', id)
+    .single();
 
+ 
   window.sendMsg = async () => {
   const txt = document.getElementById('chatInput');
   if (!txt.value.trim()) return;
