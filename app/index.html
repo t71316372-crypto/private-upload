@@ -125,15 +125,18 @@
   load();
 };
     load();
-    sb.channel('messages')
+  sb.channel('messages-realtime')
   .on(
     'postgres_changes',
-    { event: '*', schema: 'public', table: 'messages' },
-    () => {
+    { event: 'INSERT', schema: 'public', table: 'messages' },
+    (payload) => {
+      console.log("REALTIME INSERT", payload);
       load();
     }
   )
-  .subscribe();
+  .subscribe((status) => {
+    console.log("REALTIME STATUS", status);
+  });
   }
 </script>
 </body>
