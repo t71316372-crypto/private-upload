@@ -32,7 +32,7 @@
       offset: 0,
       sortBy: { column: "name", order: "asc" }
     });
-
+console.log("LIST RESULT", data, error);
   if (error) {
     gallery.innerHTML = "エラー: " + error.message;
     return;
