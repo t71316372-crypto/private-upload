@@ -67,76 +67,129 @@
 </div>
 
 <script>
-  const PASSWORD = "m&m2025"; // ここを書き換えてください
+  const PASSWORD = "m&m2025";
 
   function checkPass() {
     if (document.getElementById('passInput').value === PASSWORD) {
       document.getElementById('lockScreen').style.display = 'none';
       document.getElementById('mainContent').style.display = 'block';
       initApp();
-    } else { alert("合言葉が違うみたい…"); }
+    } else {
+      alert("合言葉が違うみたい…");
+    }
   }
 
   function initApp() {
     const p = "https://", d = "vawogrqmymsqhkwlywuf", s = ".supabase.co";
-    const sb = window.supabase.createClient(p+d+s, "sb_publishable_HC3LYlPQpF6dpz7t56A8QQ_6sEDJ20l");
-    const stamps = [{k:'smile',i:'😊'},{k:'worried',i:'😟'},{k:'cry',i:'😭'},{k:'sparkle',i:'✨'}];
+    const sb = window.supabase.createClient(p + d + s, "sb_publishable_HC3LYlPQpF6dpz7t56A8QQ_6sEDJ20l");
+
+    const stamps = [
+      { k: 'smile', i: '😊' },
+      { k: 'worried', i: '😟' },
+      { k: 'cry', i: '😭' },
+      { k: 'sparkle', i: '✨' }
+    ];
 
     async function load() {
-      const { data } = await sb.from('messages').select('*').order('created_at', { ascending: false });
-      if (data) {
-        document.getElementById('chatLog').innerHTML = data.map(m => {
-          const counts = m.reactions || {};
-          const reactionHtml = stamps.map(s => `
-            <button class="reaction-btn" onclick="addReaction(${m.id}, '${s.k}', ${counts[s.k] || 0})">
-              ${s.i} <span class="reaction-count">${counts[s.k] || 0}</span>
-            </button>
-          `).join("");
-          return `<div class="msg"><div class="name-tag">${m.sender_name}</div><div class="msg-text">${m.text}</div><div class="reaction-container">${reactionHtml}</div></div>`;
-        }).join("");
+      const { data, error } = await sb
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error(error);
+        return;
       }
+
+      document.getElementById('chatLog').innerHTML = data.map(m => {
+        const counts = m.reactions || {};
+
+        const reactionHtml = stamps.map(st => `
+          <button class="reaction-btn" onclick="addReaction(${m.id}, '${st.k}')">
+            ${st.i} <span class="reaction-count">${counts[st.k] || 0}</span>
+          </button>
+        `).join("");
+
+        return `
+          <div class="msg">
+            <div class="name-tag">${m.sender_name}</div>
+            <div class="msg-text">${m.text}</div>
+            <div class="reaction-container">${reactionHtml}</div>
+          </div>
+        `;
+      }).join("");
     }
 
-  window.addReaction = async (id, type) => {
-  const { data } = await sb
-    .from('messages')
-    .select('reactions')
-    .eq('id', id)
-    .single();
+    window.addReaction = async (id, type) => {
+      const { data, error } = await sb
+        .from('messages')
+        .select('reactions')
+        .eq('id', id)
+        .single();
 
- 
-  window.sendMsg = async () => {
-  const txt = document.getElementById('chatInput');
-  if (!txt.value.trim()) return;
+      if (error) {
+        console.error(error);
+        return;
+      }
 
-  const { error } = await sb.from('messages').insert([{
-    text: txt.value,
-    sender_name: document.getElementById('nameSelect').value,
-    reactions: {}
-  }]);
+      const reactions = data.reactions || {};
+      const key = `reaction_${id}_${type}`;
+      const alreadyReacted = localStorage.getItem(key) === "1";
 
-  if (error) {
-    alert("エラー: " + error.message);
-    console.error(error);
-    return;
-  }
+      if (alreadyReacted) {
+        reactions[type] = Math.max((reactions[type] || 0) - 1, 0);
+        localStorage.removeItem(key);
+      } else {
+        reactions[type] = (reactions[type] || 0) + 1;
+        localStorage.setItem(key, "1");
+      }
 
-  txt.value = "";
-  load();
-};
-    load();
-  sb.channel('messages-realtime')
-  .on(
-    'postgres_changes',
-    { event: 'INSERT', schema: 'public', table: 'messages' },
-    (payload) => {
-      console.log("REALTIME INSERT", payload);
+      const { error: updateError } = await sb
+        .from('messages')
+        .update({ reactions })
+        .eq('id', id);
+
+      if (updateError) {
+        console.error(updateError);
+        return;
+      }
+
       load();
-    }
-  )
-  .subscribe((status) => {
-    console.log("REALTIME STATUS", status);
-  });
+    };
+
+    window.sendMsg = async () => {
+      const txt = document.getElementById('chatInput');
+      if (!txt.value.trim()) return;
+
+      const { error } = await sb.from('messages').insert([{
+        text: txt.value,
+        sender_name: document.getElementById('nameSelect').value,
+        reactions: {}
+      }]);
+
+      if (error) {
+        alert("エラー: " + error.message);
+        console.error(error);
+        return;
+      }
+
+      txt.value = "";
+      load();
+    };
+
+    load();
+
+    sb.channel('messages-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'messages' },
+        () => {
+          load();
+        }
+      )
+      .subscribe((status) => {
+        console.log("REALTIME STATUS", status);
+      });
   }
 </script>
 </body>
