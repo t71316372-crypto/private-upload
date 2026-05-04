@@ -80,7 +80,7 @@
   function initApp() {
     const p = "https://", d = "vawogrqmymsqhkwlywuf", s = ".supabase.co";
     const sb = window.supabase.createClient(p+d+s, "sb_publishable_HC3LYlPQpF6dpz7t56A8QQ_6sEDJ20l");
-    const stamps = {k:'smile',i:'😊'},{k:'worried',i:'😟'},{k:'cry',i:'😭'},{k:'sparkle',i:'✨'}];
+    const stamps = [{k:'smile',i:'😊'},{k:'worried',i:'😟'},{k:'cry',i:'😭'},{k:'sparkle',i:'✨'}];
 
     async function load() {
       const { data } = await sb.from('messages').select('*').order('created_at', { ascending: false });
