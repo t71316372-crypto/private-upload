@@ -121,18 +121,35 @@
         .from("audio")
         .getPublicUrl(file.name);
 
-      return `
-        <div style="margin-bottom: 20px;">
-          <div>${file.name}</div>
-          <audio controls>
-            <source src="${urlData.publicUrl}">
-            このブラウザでは音声を再生できません。
-          </audio>
-        </div>
-      `;
+     return `
+  <div style="margin-bottom:20px;">
+    <div>${file.name}</div>
+
+    <audio controls controlsList="nodownload" oncontextmenu="return false;">
+      <source src="${urlData.publicUrl}">
+    </audio>
+
+    <button onclick="deleteAudio('${file.name}')">削除</button>
+  </div>
+`;
     }).join("");
   }
+async function deleteAudio(fileName) {
+  if (!confirm("削除しますか？")) return;
 
+  const { error } = await sb.storage
+    .from('audio')
+    .remove([fileName]);
+
+  if (error) {
+    alert("削除失敗: " + error.message);
+    console.error(error);
+    return;
+  }
+
+  loadAudioList();
+}
+  
   loadAudioList();
 </script>
 
