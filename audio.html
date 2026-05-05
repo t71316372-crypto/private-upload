@@ -3,38 +3,138 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
 <title>声を聴く</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
   body {
     font-family: sans-serif;
     max-width: 600px;
     margin: auto;
     padding: 20px;
+    background: #fffafa;
   }
+
   .card {
     padding: 16px;
     margin: 16px 0;
     border: 1px solid #ddd;
     border-radius: 12px;
+    background: #fff;
   }
+
   audio {
     width: 100%;
+    margin-top: 8px;
+  }
+
+  input, button {
+    margin-top: 8px;
   }
 </style>
 </head>
+
 <body>
 
 <h1>声を聴く</h1>
 
 <div class="card">
-  <p>音声テスト</p>
-  <audio controls>
-    <source src="https://vawogrqmymsqhkwlywuf.supabase.co/storage/v1/object/public/audio/voice1.mp3" type="audio/mpeg">
-    音声を再生できません。
-  </audio>
+  <h3>音声をアップロード</h3>
+  <input type="file" id="audioFile" accept="audio/*">
+  <br>
+  <button onclick="uploadAudio()">アップロード</button>
+  <p id="status"></p>
+</div>
+
+<div class="card">
+  <h3>声のアーカイブ</h3>
+  <div id="audioList">読み込み中...</div>
 </div>
 
 <a href="./index.html">← トークルームに戻る</a>
+
+<script>
+  const SUPABASE_URL = "https://vawogrqmymsqhkwlywuf.supabase.co";
+  const SUPABASE_KEY = "ここにindex.htmlと同じキーを入れる";
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  async function uploadAudio() {
+    const fileInput = document.getElementById("audioFile");
+    const status = document.getElementById("status");
+
+    if (!fileInput.files.length) {
+      status.textContent = "音声ファイルを選んでください。";
+      return;
+    }
+
+    const file = fileInput.files[0];
+    const ext = file.name.split(".").pop();
+    const fileName = `voice-${Date.now()}.${ext}`;
+
+    status.textContent = "アップロード中...";
+
+    const { error } = await sb.storage
+      .from("audio")
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type
+      });
+
+    if (error) {
+      status.textContent = "アップロード失敗: " + error.message;
+      console.error(error);
+      return;
+    }
+
+    status.textContent = "アップロード完了";
+    fileInput.value = "";
+    loadAudioList();
+  }
+
+  async function loadAudioList() {
+    const list = document.getElementById("audioList");
+
+    const { data, error } = await sb.storage
+      .from("audio")
+      .list("", {
+        limit: 100,
+        sortBy: { column: "created_at", order: "desc" }
+      });
+
+    if (error) {
+      list.textContent = "読み込み失敗: " + error.message;
+      console.error(error);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      list.textContent = "まだ音声がありません。";
+      return;
+    }
+
+    list.innerHTML = data.map(file => {
+      const { data: urlData } = sb.storage
+        .from("audio")
+        .getPublicUrl(file.name);
+
+      return `
+        <div style="margin-bottom: 20px;">
+          <div>${file.name}</div>
+          <audio controls>
+            <source src="${urlData.publicUrl}">
+            このブラウザでは音声を再生できません。
+          </audio>
+        </div>
+      `;
+    }).join("");
+  }
+
+  loadAudioList();
+</script>
 
 </body>
 </html>
