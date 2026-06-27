@@ -74,6 +74,13 @@
   color: #7c3aed;
   font-weight: bold;
 }
+ .chat-image{
+  width:100%;
+  max-width:320px;
+  border-radius:12px;
+  margin-top:10px;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -160,13 +167,26 @@
           </button>
         `).join("");
 
-        return `
-          <div class="msg">
-            <div class="name-tag">${m.sender_name}</div>
-            <div class="msg-text">${m.text}</div>
-            <div class="reaction-container">${reactionHtml}</div>
-          </div>
-        `;
+       return `
+  <div class="msg">
+    <div class="name-tag">${m.sender_name}</div>
+
+    <div class="msg-text">${m.text || ""}</div>
+
+    ${
+      m.image_url
+      ? `<img
+           src="${m.image_url}"
+           class="chat-image"
+           onclick="openImage('${m.image_url}')">`
+      : ""
+    }
+
+    <div class="reaction-container">
+      ${reactionHtml}
+    </div>
+  </div>
+`;
       }).join("");
 
   
@@ -260,11 +280,37 @@
     sb.channel('messages-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
         load();
+
+window.openImage = function(url){
+    document.getElementById("viewerImg").src = url;
+    document.getElementById("imageViewer").style.display = "flex";
+}
+
+window.closeImage = function(){
+    document.getElementById("imageViewer").style.display = "none";
+}
+       
       })
       .subscribe();
   }
 </script>
+<div id="imageViewer"
+     style="
+       display:none;
+       position:fixed;
+       left:0;
+       top:0;
+       width:100%;
+       height:100%;
+       background:rgba(0,0,0,.9);
+       z-index:9999;
+       justify-content:center;
+       align-items:center;"
+     onclick="closeImage()">
 
+  <img id="viewerImg"
+       style="max-width:95%;max-height:95%;border-radius:12px;">
+</div>
 </body>
 </html>
 
