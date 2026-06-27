@@ -192,27 +192,68 @@
     };
 
     window.sendMsg = async () => {
-      const txt = document.getElementById('chatInput');
-      const btn = document.getElementById('sendBtn');
+  const txt = document.getElementById('chatInput');
+  const btn = document.getElementById('sendBtn');
+  const imageInput = document.getElementById('imageInput');
 
-      if (!txt.value.trim()) {
-        txt.value = "";
-        return;
-      }
+  const textValue = txt.value.trim();
+  const imageFile = imageInput.files[0];
 
-      btn.disabled = true;
+  if (!textValue && !imageFile) {
+    txt.value = "";
+    return;
+  }
 
-      await sb.from('messages').insert([{
-        text: txt.value,
-        sender_name: document.getElementById('nameSelect').value,
-        reactions: {}
-      }]);
+  btn.disabled = true;
 
-      txt.value = "";
+  let imageUrl = null;
+
+  if (imageFile) {
+    const ext = imageFile.name.split('.').pop();
+    const fileName = `chat-${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await sb.storage
+      .from('images')
+      .upload(fileName, imageFile, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: imageFile.type
+      });
+
+    if (uploadError) {
+      alert("画像アップロード失敗: " + uploadError.message);
+      console.error(uploadError);
       btn.disabled = false;
+      return;
+    }
 
-      load();
-    };
+    const { data: urlData } = sb.storage
+      .from('images')
+      .getPublicUrl(fileName);
+
+    imageUrl = urlData.publicUrl;
+  }
+
+  const { error } = await sb.from('messages').insert([{
+    text: textValue,
+    sender_name: document.getElementById('nameSelect').value,
+    image_url: imageUrl,
+    reactions: {}
+  }]);
+
+  if (error) {
+    alert("投稿失敗: " + error.message);
+    console.error(error);
+    btn.disabled = false;
+    return;
+  }
+
+  txt.value = "";
+  imageInput.value = "";
+  btn.disabled = false;
+
+  load();
+};
 
     load();
 
