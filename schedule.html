@@ -128,10 +128,11 @@
 
   <div>
     <label>名前</label><br>
-    <select id="nameInput">
-      <option value="まさ">まさ</option>
-      <option value="まい">まい</option>
-    </select>
+  <div class="name-buttons">
+  <button type="button" class="name-btn active" data-name="まさ">まさ</button>
+  <button type="button" class="name-btn" data-name="まい">まい</button>
+</div>
+<input type="hidden" id="nameInput" value="まさ">
   </div>
 
   <div>
@@ -140,6 +141,7 @@
   </div>
 
  <div>
+<div>
   <label>時間帯</label><br>
   <div class="slot-buttons">
     <button type="button" class="slot-btn active" data-slot="夜">夜</button>
@@ -148,7 +150,6 @@
     <button type="button" class="slot-btn" data-slot="午前">午前</button>
     <button type="button" class="slot-btn" data-slot="終日">終日</button>
   </div>
-  <input type="hidden" id="slotInput" value="夜">
 </div>
 
   <button onclick="addDay()">登録</button>
