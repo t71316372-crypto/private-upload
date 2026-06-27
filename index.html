@@ -129,7 +129,13 @@
       { k: 'sparkle', i: '✨' }
     ];
 
-    
+    document.querySelectorAll(".name-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".name-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("nameSelect").value = btn.dataset.name;
+  });
+});
 
     async function load() {
       const { data } = await sb.from('messages').select('*').order('created_at', { ascending: false });
@@ -171,13 +177,7 @@
         reactions[type] = (reactions[type] || 0) + 1;
         localStorage.setItem(key, "1");
       }
-document.querySelectorAll(".name-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".name-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    document.getElementById("nameSelect").value = btn.dataset.name;
-  });
-});
+
       await sb.from('messages').update({ reactions }).eq('id', id);
       load();
     };
