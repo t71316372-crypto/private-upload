@@ -52,6 +52,25 @@
   button { margin-top: 10px; }
 
   .nav-link { display: inline-block; margin-top: 10px; color: #8b5cf6; text-decoration: none; }
+  .name-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.name-btn {
+  padding: 8px 18px;
+  border-radius: 18px;
+  border: 1px solid #c4b5fd;
+  background: #fff;
+  cursor: pointer;
+}
+
+.name-btn.active {
+  background: #ede9fe;
+  color: #7c3aed;
+  font-weight: bold;
+}
 </style>
 </head>
 
@@ -67,10 +86,11 @@
   <h1>Just the two of us<br>会話空間</h1>
 
   <div class="card">
-    <select id="nameSelect">
-      <option value="まさ">まさ</option>
-      <option value="まい">まい</option>
-    </select>
+  <div class="name-buttons">
+  <button type="button" class="name-btn active" data-name="まさ">まさ</button>
+  <button type="button" class="name-btn" data-name="まい">まい</button>
+</div>
+<input type="hidden" id="nameSelect" value="まさ">
 
     <textarea id="chatInput" placeholder="メッセージを入力"></textarea>
     <button id="sendBtn" onclick="sendMsg()">話しかける</button>
@@ -151,7 +171,13 @@
         reactions[type] = (reactions[type] || 0) + 1;
         localStorage.setItem(key, "1");
       }
-
+document.querySelectorAll(".name-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".name-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("nameSelect").value = btn.dataset.name;
+  });
+});
       await sb.from('messages').update({ reactions }).eq('id', id);
       load();
     };
