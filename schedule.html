@@ -116,6 +116,25 @@
   color: #7c3aed;
   font-weight: bold;
 }
+  .name-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.name-btn {
+  padding: 8px 18px;
+  border-radius: 18px;
+  border: 1px solid #c4b5fd;
+  background: #fff;
+  cursor: pointer;
+}
+
+.name-btn.active {
+  background: #ede9fe;
+  color: #7c3aed;
+  font-weight: bold;
+}
 </style>
 </head>
 
@@ -174,11 +193,17 @@
     const week = ["日", "月", "火", "水", "木", "金", "土"][d.getDay()];
     return `${d.getMonth() + 1}/${d.getDate()}（${week}）`;
   }
+document.querySelectorAll(".name-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".name-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("nameInput").value = btn.dataset.name;
+  });
+});
+
 document.querySelectorAll(".slot-btn").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".slot-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    document.getElementById("slotInput").value = btn.dataset.slot;
+    btn.classList.toggle("active");
   });
 });
  async function loadDays() {
@@ -228,31 +253,49 @@ document.querySelectorAll(".slot-btn").forEach(btn => {
   }).join("");
 }
 
-  async function addDay() {
-    const name = document.getElementById("nameInput").value;
-    const date = document.getElementById("dateInput").value;
-    const time_slot = document.getElementById("slotInput").value;
-    const status = document.getElementById("status");
+ async function addDay() {
+  const name = document.getElementById("nameInput").value;
+  const date = document.getElementById("dateInput").value;
+  const status = document.getElementById("status");
 
-    if (!date) {
-      status.textContent = "日付を選んでください。";
-      return;
-    }
+  const selectedSlots = Array.from(document.querySelectorAll(".slot-btn.active"))
+    .map(btn => btn.dataset.slot);
 
-    const { error } = await sb
-      .from("available_days")
-      .insert([{ name, date, time_slot }]);
-
-    if (error) {
-      status.textContent = "登録失敗: " + error.message;
-      console.error(error);
-      return;
-    }
-
-    status.textContent = "登録しました。";
-    document.getElementById("dateInput").value = "";
-    loadDays();
+  if (!date) {
+    status.textContent = "日付を選んでください。";
+    return;
   }
+
+  if (selectedSlots.length === 0) {
+    status.textContent = "時間帯を選んでください。";
+    return;
+  }
+
+  const rows = selectedSlots.map(slot => ({
+    name,
+    date,
+    time_slot: slot
+  }));
+
+  const { error } = await sb
+    .from("available_days")
+    .insert(rows);
+
+  if (error) {
+    status.textContent = "登録失敗: " + error.message;
+    console.error(error);
+    return;
+  }
+
+  status.textContent = "登録しました。";
+  document.getElementById("dateInput").value = "";
+
+ document.querySelectorAll(".slot-btn").forEach(btn => {
+  btn.classList.remove("active");
+});
+
+  loadDays();
+}
 
   async function deleteDay(id) {
     if (!confirm("この候補日を削除しますか？")) return;
