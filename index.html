@@ -95,8 +95,15 @@
 </div>
 <input type="hidden" id="nameSelect" value="まさ">
 
-    <textarea id="chatInput" placeholder="メッセージを入力"></textarea>
-    <button id="sendBtn" onclick="sendMsg()">話しかける</button>
+   <textarea id="chatInput" placeholder="メッセージを入力"></textarea>
+
+<input
+  type="file"
+  id="imageInput"
+  accept="image/*"
+  style="display:block;margin-top:10px;">
+
+<button id="sendBtn" onclick="sendMsg()">話しかける</button>
 
     <div id="chatLog"></div>
   </div>
