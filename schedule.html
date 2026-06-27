@@ -206,7 +206,7 @@ document.querySelectorAll(".slot-btn").forEach(btn => {
     btn.classList.toggle("active");
   });
 });
- async function loadDays() {
+async function loadDays() {
   const list = document.getElementById("dayList");
 
   const today = new Date();
@@ -230,24 +230,56 @@ document.querySelectorAll(".slot-btn").forEach(btn => {
     return;
   }
 
-  const matchKeys = {};
+  const grouped = {};
+
   data.forEach(item => {
-    const key = `${item.date}_${item.time_slot}`;
-    if (!matchKeys[key]) matchKeys[key] = new Set();
-    matchKeys[key].add(item.name);
+    if (!grouped[item.date]) {
+      grouped[item.date] = {
+        date: item.date,
+        items: [],
+        byName: {}
+      };
+    }
+
+    grouped[item.date].items.push(item);
+
+    if (!grouped[item.date].byName[item.name]) {
+      grouped[item.date].byName[item.name] = [];
+    }
+
+    grouped[item.date].byName[item.name].push(item.time_slot);
   });
 
-  list.innerHTML = data.map(item => {
-    const key = `${item.date}_${item.time_slot}`;
-    const isMatch = matchKeys[key].has("まさ") && matchKeys[key].has("まい");
+  list.innerHTML = Object.values(grouped).map(group => {
+    const masaSlots = group.byName["まさ"] || [];
+    const maiSlots = group.byName["まい"] || [];
+
+    const matchedSlots = masaSlots.filter(slot => maiSlots.includes(slot));
+    const isMatch = matchedSlots.length > 0;
+
+    const itemsHtml = Object.entries(group.byName).map(([name, slots]) => {
+      const uniqueSlots = [...new Set(slots)];
+      return `
+        <div class="name">
+          <strong>${name}</strong>：${uniqueSlots.join("・")}
+        </div>
+      `;
+    }).join("");
+
+    const deleteButtons = group.items.map(item => `
+      <button class="delete-btn" onclick="deleteDay(${item.id})">
+        ${item.name} ${item.time_slot} を削除
+      </button>
+    `).join("");
 
     return `
       <div class="item ${isMatch ? "match" : ""}">
-        ${isMatch ? `<div class="match-label">💜 話せそう！</div>` : ""}
-        <div class="date">${formatDate(item.date)}</div>
-        <div class="slot">${item.time_slot}</div>
-        <div class="name">${item.name}</div>
-        <button class="delete-btn" onclick="deleteDay(${item.id})">削除</button>
+        ${isMatch ? `<div class="match-label">💜 話せそう！ ${matchedSlots.join("・")}</div>` : ""}
+        <div class="date">${formatDate(group.date)}</div>
+        ${itemsHtml}
+        <div style="margin-top:10px;">
+          ${deleteButtons}
+        </div>
       </div>
     `;
   }).join("");
@@ -286,7 +318,7 @@ document.querySelectorAll(".slot-btn").forEach(btn => {
     console.error(error);
     return;
   }
-
+await postMatchMessageIfNeeded(date, selectedSlots, name);
   status.textContent = "登録しました。";
   document.getElementById("dateInput").value = "";
 
@@ -296,7 +328,35 @@ document.querySelectorAll(".slot-btn").forEach(btn => {
 
   loadDays();
 }
+async function postMatchMessageIfNeeded(date, selectedSlots, currentName) {
+  const otherName = currentName === "まさ" ? "まい" : "まさ";
 
+  const { data, error } = await sb
+    .from("available_days")
+    .select("*")
+    .eq("date", date)
+    .eq("name", otherName);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const otherSlots = data.map(item => item.time_slot);
+  const matchedSlots = selectedSlots.filter(slot => otherSlots.includes(slot));
+
+  if (matchedSlots.length === 0) return;
+
+  for (const slot of matchedSlots) {
+    const messageText = `📅 ${formatDate(date)} ${slot}\n二人とも話せそうです😊`;
+
+    await sb.from("messages").insert([{
+      text: messageText,
+      sender_name: "system",
+      reactions: {}
+    }]);
+  }
+}
   async function deleteDay(id) {
     if (!confirm("この候補日を削除しますか？")) return;
 
