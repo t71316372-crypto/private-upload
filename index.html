@@ -133,17 +133,19 @@
 </div>
 
 <script>
-  const PASSWORD = "20250811";
+ const PASSWORDS = ["2025", "20250811"];
 
-  function checkPass() {
-    if (document.getElementById('passInput').value === PASSWORD) {
-      document.getElementById('lockScreen').style.display = 'none';
-      document.getElementById('mainContent').style.display = 'block';
-      initApp();
-    } else {
-      alert("合言葉が違うみたい…");
-    }
+function checkPass() {
+  const input = document.getElementById('passInput').value;
+
+  if (PASSWORDS.includes(input)) {
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    initApp();
+  } else {
+    alert("合言葉が違うみたい…");
   }
+}
 
   function initApp() {
     const p = "https://", d = "vawogrqmymsqhkwlywuf", s = ".supabase.co";
