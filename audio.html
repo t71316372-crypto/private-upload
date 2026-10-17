@@ -79,13 +79,28 @@
 
     status.textContent = "アップロード中...";
 
-    const { error } = await sb.storage
-      .from("audio")
-      .upload(fileName, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type
-      });
+   const ext = file.name.split('.').pop().toLowerCase();
+
+let contentType = file.type;
+
+if (!contentType) {
+  if (ext === "m4a") contentType = "audio/mp4";
+  else if (ext === "mp3") contentType = "audio/mpeg";
+  else if (ext === "wav") contentType = "audio/wav";
+  else if (ext === "aac") contentType = "audio/aac";
+  else if (ext === "caf") contentType = "audio/x-caf";
+  else contentType = "application/octet-stream";
+}
+
+const fileName = `voice-${Date.now()}.${ext}`;
+
+const { error } = await sb.storage
+  .from("audio")
+  .upload(fileName, file, {
+    cacheControl: "3600",
+    upsert: false,
+    contentType: contentType
+  });
 
     if (error) {
       status.textContent = "アップロード失敗: " + error.message;
